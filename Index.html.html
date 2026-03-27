@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ORDO — Sua Ordem Contra o Caos</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#C8A951;--gold2:#E2C46A;--gold-dim:rgba(200,169,81,.13);
+  --gold-border:rgba(200,169,81,.24);--black:#080808;--dark:#0F0F0F;
+  --card:#141414;--card2:#1C1C1C;--text:#EDE8DC;--muted:#5A5448;
+  --muted2:#8A8070;--r:12px;
+  --pro:#C8A951;--free:#5A5448;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--black);}
+body{font-family:'DM Sans',sans-serif;color:var(--text);}
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9998;opacity:.6;}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--black);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:9999;transition:opacity .9s,visibility .9s;}
+#splash.out{opacity:0;visibility:hidden;}
+.splash-logo{font-family:'Bebas Neue',sans-serif;font-size:6rem;letter-spacing:.25em;color:var(--gold);
+  animation:breathe 2s ease-in-out infinite;}
+.splash-line{width:38px;height:1px;background:var(--gold-border);margin:.7rem auto;}
+.splash-sub{font-size:.6rem;letter-spacing:.38em;color:var(--muted);text-transform:uppercase;}
+@keyframes breathe{0%,100%{opacity:.5;text-shadow:0 0 30px rgba(200,169,81,.2);}50%{opacity:1;text-shadow:0 0 70px rgba(200,169,81,.7);}}
+
+/* APP */
+#app{position:fixed;inset:0;opacity:0;transition:opacity .6s;}
+#app.in{opacity:1;}
+
+/* SCREENS */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;
+  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateY(10px);}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0);}
+#screen-onboarding.active{overflow-y:auto;}
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:5.5rem;}
+.scroll-area::-webkit-scrollbar{width:2px;}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--gold-border);border-radius:2px;}
+
+/* HEADER */
+.app-header{padding:.82rem 1.4rem;border-bottom:1px solid var(--gold-border);
+  background:rgba(8,8,8,.97);backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10;}
+.header-logo{font-family:'Bebas Neue',sans-serif;font-size:1.55rem;letter-spacing:.15em;color:var(--gold);}
+.pro-badge{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.18em;
+  color:var(--black);background:var(--gold);padding:.2rem .65rem;border-radius:20px;}
+.free-badge{font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.15em;
+  color:var(--muted2);background:var(--card2);border:1px solid var(--gold-border);
+  padding:.2rem .65rem;border-radius:20px;cursor:pointer;}
+.score-num-badge{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);
+  background:var(--gold-dim);border:1px solid var(--gold-border);
+  padding:.18rem .65rem;border-radius:20px;letter-spacing:.1em;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,8,8,.97);
+  border-top:1px solid var(--gold-border);backdrop-filter:blur(20px);display:flex;z-index:100;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:.58rem .3rem;cursor:pointer;border:none;background:transparent;
+  color:var(--muted);transition:color .2s;}
+.nav-btn.active{color:var(--gold);}
+.nav-icon{font-size:1.1rem;line-height:1;}
+.nav-lbl{font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;font-family:'DM Sans',sans-serif;}
+
+/* ONBOARDING */
+#screen-onboarding{background:var(--black);overflow-y:auto;}
+.ob-wrap{flex:1;display:flex;flex-direction:column;padding:2rem 1.5rem 4rem;min-height:100%;overflow-y:visible;}
+.ob-step{display:none;}
+.ob-step.active{display:flex;flex-direction:column;animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.step-bar{display:flex;gap:4px;margin-bottom:2.2rem;}
+.step-dot{flex:1;height:2px;background:var(--card2);border-radius:2px;transition:background .3s;}
+.step-dot.done{background:var(--gold);}
+.step-ctr{font-size:.6rem;letter-spacing:.3em;color:var(--muted);text-transform:uppercase;margin-bottom:.7rem;}
+.ob-title{font-family:'DM Serif Display',serif;font-size:2.2rem;line-height:1.15;color:var(--text);margin-bottom:.7rem;}
+.ob-title em{color:var(--gold);font-style:italic;}
+.ob-desc{font-size:.87rem;line-height:1.7;color:var(--muted2);margin-bottom:1.7rem;}
+.choices{display:flex;flex-direction:column;gap:.62rem;margin-bottom:1.7rem;}
+.choice{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);
+  padding:.92rem 1.1rem;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:.85rem;}
+.choice.sel{border-color:var(--gold);background:var(--gold-dim);}
+.c-icon{font-size:1.3rem;flex-shrink:0;margin-top:2px;}
+.c-lbl{font-weight:600;font-size:.9rem;color:var(--text);}
+.c-sub{font-size:.74rem;color:var(--muted2);margin-top:2px;line-height:1.4;}
+.btn-main{width:100%;padding:.95rem;background:var(--gold);color:var(--black);border:none;
+  border-radius:var(--r);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.2em;
+  cursor:pointer;transition:all .15s;}
+.btn-main:active{transform:scale(.98);}
+.btn-main:disabled{opacity:.3;cursor:not-allowed;}
+.btn-ghost{width:100%;padding:.88rem;background:transparent;color:var(--gold);
+  border:1px solid var(--gold-border);border-radius:var(--r);
+  font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.2em;
+  cursor:pointer;transition:all .15s;margin-top:.6rem;}
+.btn-ghost:active{background:var(--gold-dim);}
+.profile-card{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);
+  padding:1.4rem;margin-bottom:1.3rem;position:relative;overflow:hidden;}
+.profile-card::before{content:'';position:absolute;top:-35px;right:-35px;width:100px;height:100px;
+  border-radius:50%;background:radial-gradient(circle,var(--gold-dim),transparent 70%);}
+.p-type{font-size:.58rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:.3rem;}
+.p-name{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--text);margin-bottom:.45rem;}
+.p-desc{font-size:.8rem;color:var(--muted2);line-height:1.6;}
+
+/* ── HOME ── */
+.home-hero{padding:1.6rem 1.4rem 1.2rem;
+  background:linear-gradient(180deg,rgba(200,169,81,.06),transparent);
+  border-bottom:1px solid var(--gold-border);}
+.h-greet{font-size:.58rem;letter-spacing:.28em;color:var(--muted);text-transform:uppercase;margin-bottom:.22rem;}
+.h-title{font-family:'DM Serif Display',serif;font-size:2.2rem;line-height:1.1;color:var(--text);}
+.h-title em{color:var(--gold);font-style:italic;}
+.score-strip{margin:1.25rem 1.4rem;background:var(--card);border:1px solid var(--gold-border);
+  border-radius:var(--r);padding:1.15rem;display:flex;align-items:center;gap:1.1rem;}
+.ring-wrap{position:relative;width:66px;height:66px;flex-shrink:0;}
+.ring-svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--card2);stroke-width:5;}
+.ring-fill{fill:none;stroke:var(--gold);stroke-width:5;stroke-linecap:round;
+  stroke-dasharray:188;stroke-dashoffset:188;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold);}
+.score-lbl{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.08em;color:var(--text);}
+.score-msg{font-size:.73rem;color:var(--muted2);margin-top:3px;}
+.score-trend{display:inline-block;margin-top:.32rem;font-size:.6rem;letter-spacing:.1em;
+  color:var(--gold);background:var(--gold-dim);border:1px solid var(--gold-border);
+  padding:.1rem .48rem;border-radius:10px;}
+.sec-lbl{font-size:.56rem;letter-spacing:.28em;color:var(--muted);text-transform:uppercase;
+  padding:0 1.4rem;margin-bottom:.62rem;margin-top:1.25rem;}
+
+/* HABITS */
+.habits-list{display:flex;flex-direction:column;gap:.52rem;padding:0 1.4rem;}
+.habit-row{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);
+  overflow:hidden;cursor:pointer;transition:border-color .2s;position:relative;}
+.habit-row.done{border-color:rgba(200,169,81,.42);}
+.hbar{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--muted);border-radius:2px 0 0 2px;transition:background .2s;}
+.habit-row.done .hbar{background:var(--gold);}
+.habit-hdr{padding:.82rem 1rem;display:flex;align-items:center;gap:.82rem;}
+.h-emoji{font-size:1.2rem;flex-shrink:0;}
+.h-info{flex:1;}
+.h-name{font-weight:600;font-size:.87rem;color:var(--text);}
+.h-hint{font-size:.68rem;color:var(--muted2);margin-top:1px;}
+.h-status{font-size:.62rem;padding:.18rem .5rem;border-radius:20px;
+  font-family:'Bebas Neue',sans-serif;letter-spacing:.07em;flex-shrink:0;}
+.s-none{color:var(--muted);background:var(--card2);}
+.s-ok{color:var(--black);background:var(--gold);}
+.s-par{color:var(--gold);background:var(--gold-dim);border:1px solid var(--gold-border);}
+.s-bad{color:#E74C3C;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.25);}
+.habit-expand{max-height:0;overflow:hidden;transition:max-height .36s ease;}
+.habit-row.open .habit-expand{max-height:700px;}
+.habit-expand-in{padding:.25rem 1rem 1rem;border-top:1px solid var(--gold-border);}
+
+/* TREINO OPTIONS */
+.t-opts{display:flex;gap:.45rem;margin-bottom:.85rem;}
+.t-opt{flex:1;padding:.68rem .3rem;background:var(--card2);border:1.5px solid var(--card2);
+  border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;}
+.t-opt.sel-ok{border-color:var(--gold);background:var(--gold-dim);}
+.t-opt.sel-par{border-color:rgba(200,169,81,.6);background:var(--gold-dim);}
+.t-opt.sel-bad{border-color:rgba(231,76,60,.5);background:rgba(231,76,60,.08);}
+.t-opt-icon{font-size:1.2rem;}
+.t-opt-lbl{font-size:.6rem;color:var(--muted2);margin-top:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.07em;}
+.t-opt.sel-ok .t-opt-lbl,.t-opt.sel-par .t-opt-lbl{color:var(--gold);}
+.t-opt.sel-bad .t-opt-lbl{color:#E74C3C;}
+.dur-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.85rem;}
+.dur-lbl{font-size:.62rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;flex-shrink:0;}
+input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--card2);border-radius:2px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--gold);cursor:pointer;border:2px solid var(--black);}
+.dur-val{font-family:'Bebas Neue',sans-serif;font-size:.88rem;color:var(--gold);width:38px;text-align:right;flex-shrink:0;}
+
+/* PRO FIELDS */
+.pro-field{background:var(--card2);border:1px solid rgba(200,169,81,.15);border-radius:10px;padding:.9rem;margin-bottom:.82rem;}
+.pro-field-lbl{font-size:.6rem;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;
+  display:flex;align-items:center;gap:.4rem;margin-bottom:.55rem;}
+.pro-badge-sm{font-size:.52rem;padding:.1rem .4rem;background:var(--gold);color:var(--black);
+  border-radius:10px;font-family:'Bebas Neue',sans-serif;letter-spacing:.08em;}
+.free-blur{filter:blur(3px);pointer-events:none;opacity:.4;}
+.free-overlay{position:relative;}
+.free-overlay-cta{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;}
+.free-overlay-btn{background:var(--gold);color:var(--black);border:none;border-radius:8px;
+  padding:.4rem .9rem;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.12em;cursor:pointer;}
+
+/* SONO */
+.sono-qual{display:flex;gap:.45rem;margin-bottom:.82rem;}
+.sq{flex:1;padding:.62rem .25rem;background:var(--card2);border:1.5px solid var(--card2);
+  border-radius:10px;text-align:center;cursor:pointer;transition:all .2s;}
+.sq.sel{border-color:var(--gold);background:var(--gold-dim);}
+.sq-icon{font-size:1.15rem;}
+.sq-lbl{font-size:.58rem;color:var(--muted2);margin-top:3px;font-family:'Bebas Neue',sans-serif;letter-spacing:.07em;}
+.sq.sel .sq-lbl{color:var(--gold);}
+.sono-row{display:flex;gap:.55rem;margin-bottom:.82rem;}
+.si-wrap{flex:1;}
+.si-lbl{font-size:.58rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:.32rem;display:block;}
+.si{width:100%;background:var(--card2);border:1px solid var(--gold-border);border-radius:8px;
+  padding:.52rem .68rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.83rem;outline:none;transition:border-color .2s;}
+.si:focus{border-color:var(--gold);}
+textarea.si{resize:none;min-height:62px;}
+
+/* TOGGLE */
+.tog-row{display:flex;align-items:center;justify-content:space-between;
+  padding:.58rem 0;border-bottom:1px solid var(--gold-border);}
+.tog-row:last-child{border-bottom:none;}
+.tog-lbl{font-size:.83rem;color:var(--text);}
+.tog{width:38px;height:21px;background:var(--card2);border-radius:11px;position:relative;cursor:pointer;transition:background .3s;flex-shrink:0;}
+.tog::after{content:'';position:absolute;width:15px;height:15px;background:var(--muted2);
+  border-radius:50%;top:3px;left:3px;transition:transform .3s,background .3s;}
+.tog.on{background:rgba(200,169,81,.22);}
+.tog.on::after{transform:translateX(17px);background:var(--gold);}
+.save-btn{width:100%;padding:.68rem;background:var(--gold);color:var(--black);border:none;
+  border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.14em;cursor:pointer;margin-top:.65rem;}
+.save-btn:active{transform:scale(.98);}
+
+/* UPGRADE INLINE CARD */
+.upgrade-strip{margin:0 1.4rem;background:linear-gradient(135deg,rgba(200,169,81,.1),rgba(200,169,81,.03));
+  border:1px solid var(--gold-border);border-radius:var(--r);padding:1.1rem;
+  display:flex;align-items:center;gap:.9rem;}
+.upgrade-strip-icon{font-size:1.6rem;flex-shrink:0;}
+.upgrade-strip-text{flex:1;}
+.upgrade-strip-title{font-weight:600;font-size:.88rem;color:var(--text);margin-bottom:2px;}
+.upgrade-strip-sub{font-size:.72rem;color:var(--muted2);}
+.upgrade-strip-btn{background:var(--gold);color:var(--black);border:none;border-radius:8px;
+  padding:.48rem .85rem;font-family:'Bebas Neue',sans-serif;font-size:.75rem;letter-spacing:.12em;cursor:pointer;flex-shrink:0;}
+
+/* ── SEMANA BLINDADA ── */
+.week-header{padding:1.5rem 1.4rem 1rem;border-bottom:1px solid var(--gold-border);}
+.wk-eyebrow{font-size:.56rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:.28rem;}
+.wk-title{font-family:'DM Serif Display',serif;font-size:1.85rem;color:var(--text);margin-bottom:.22rem;}
+.wk-sub{font-size:.8rem;color:var(--muted2);line-height:1.5;}
+.week-days{display:flex;gap:5px;padding:1rem 1.4rem .4rem;overflow-x:auto;}
+.week-days::-webkit-scrollbar{display:none;}
+.day-pill{flex-shrink:0;width:40px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
+.d-name{font-size:.56rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;}
+.d-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;font-weight:600;color:var(--muted2);border:1.5px solid var(--card2);transition:all .2s;}
+.day-pill.active .d-num{background:var(--gold);color:var(--black);border-color:var(--gold);}
+.day-pill.done .d-num{background:var(--gold-dim);color:var(--gold);border-color:var(--gold-border);}
+
+/* TIMELINE */
+.tl-section{padding:1rem 1.4rem;}
+.tl-lbl{font-size:.56rem;letter-spacing:.24em;color:var(--muted);text-transform:uppercase;margin-bottom:.75rem;}
+.tl-wrap{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);overflow:hidden;padding:0 .85rem;}
+.tl-track{position:relative;height:560px;padding:8px 0;}
+.ruler-line{position:absolute;left:50px;right:0;height:1px;background:rgba(255,255,255,.035);}
+.ruler-lbl{position:absolute;left:0;width:44px;font-size:.56rem;color:var(--muted);
+  font-family:'Bebas Neue',sans-serif;letter-spacing:.05em;text-align:right;}
+.tblock{position:absolute;left:54px;right:5px;border-radius:8px;cursor:grab;
+  user-select:none;touch-action:none;transition:box-shadow .2s;
+  display:flex;flex-direction:column;justify-content:center;padding:.28rem .65rem;border:1px solid transparent;}
+.tblock:active{cursor:grabbing;}
+.tblock.dragging{box-shadow:0 10px 30px rgba(0,0,0,.6);z-index:20;opacity:.9;}
+.tb-name{font-weight:600;font-size:.75rem;color:var(--text);line-height:1.2;}
+.tb-time{font-family:'Bebas Neue',sans-serif;font-size:.67rem;letter-spacing:.07em;margin-top:2px;}
+.tb-dur{font-size:.6rem;color:rgba(255,255,255,.4);margin-top:1px;}
+.bc-treino{background:rgba(200,169,81,.17);border-color:rgba(200,169,81,.32);}
+.bc-treino .tb-time{color:var(--gold);}
+.bc-ineg{background:rgba(52,152,219,.13);border-color:rgba(52,152,219,.28);}
+.bc-ineg .tb-time{color:#5dade2;}
+.bc-plano{background:rgba(46,204,113,.11);border-color:rgba(46,204,113,.25);}
+.bc-plano .tb-time{color:#58d68d;}
+.bc-sono{background:rgba(155,89,182,.13);border-color:rgba(155,89,182,.28);}
+.bc-sono .tb-time{color:#bb8fce;}
+.bc-hidra{background:rgba(26,188,156,.11);border-color:rgba(26,188,156,.26);}
+.bc-hidra .tb-time{color:#48c9b0;}
+.bc-review{background:rgba(231,76,60,.1);border-color:rgba(231,76,60,.22);}
+.bc-review .tb-time{color:#e57373;}
+.tl-hint{display:flex;align-items:center;gap:.45rem;padding:.65rem .85rem;
+  border-top:1px solid var(--gold-border);font-size:.68rem;color:var(--muted2);}
+
+.rotina-gerada{margin:1rem 1.4rem;background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);overflow:hidden;}
+.rg-header{padding:.9rem 1.1rem;border-bottom:1px solid var(--gold-border);display:flex;align-items:center;justify-content:space-between;}
+.rg-title{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.1em;color:var(--text);}
+.rg-badge{font-size:.56rem;padding:.15rem .5rem;background:var(--gold);color:var(--black);
+  border-radius:10px;font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;}
+.rg-item{padding:.78rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.04);
+  display:flex;align-items:center;gap:.8rem;}
+.rg-item:last-child{border-bottom:none;}
+.rg-time{font-family:'Bebas Neue',sans-serif;font-size:.82rem;color:var(--gold);letter-spacing:.06em;width:44px;flex-shrink:0;}
+.rg-name{font-size:.82rem;color:var(--text);font-weight:500;}
+.rg-dur{font-size:.68rem;color:var(--muted2);margin-top:1px;}
+
+.contingency-box{margin:1rem 1.4rem 0;background:var(--card);
+  border:1px solid rgba(192,57,43,.28);border-radius:var(--r);padding:1rem;}
+.cg-tag{font-size:.56rem;letter-spacing:.2em;color:#E74C3C;text-transform:uppercase;margin-bottom:.25rem;}
+.cg-title{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.07em;color:var(--text);margin-bottom:.25rem;}
+.cg-desc{font-size:.74rem;color:var(--muted2);line-height:1.5;}
+
+/* ── UPGRADE SCREEN ── */
+#screen-upgrade{background:var(--black);}
+.up-header{padding:1.5rem 1.4rem 1rem;border-bottom:1px solid var(--gold-border);}
+.up-eyebrow{font-size:.56rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:.3rem;}
+.up-title{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--text);margin-bottom:.3rem;}
+.up-sub{font-size:.82rem;color:var(--muted2);line-height:1.5;}
+
+.plan-cards{padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:.8rem;}
+.plan-card{background:var(--card);border:1.5px solid var(--gold-border);border-radius:16px;overflow:hidden;transition:border-color .2s;}
+.plan-card.featured{border-color:var(--gold);}
+.plan-top{padding:1.2rem;}
+.plan-featured-bar{background:var(--gold);padding:.28rem .9rem;text-align:center;
+  font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.18em;color:var(--black);}
+.plan-tag{font-size:.58rem;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;margin-bottom:.28rem;}
+.plan-name{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--text);margin-bottom:.2rem;}
+.plan-price{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--gold);letter-spacing:.05em;line-height:1;}
+.plan-price span{font-size:.9rem;color:var(--muted2);font-family:'DM Sans',sans-serif;font-weight:400;}
+.plan-divider{height:1px;background:var(--gold-border);margin:1rem 1.2rem;}
+.plan-features{padding:0 1.2rem 1.2rem;}
+.pf{display:flex;align-items:flex-start;gap:.6rem;margin-bottom:.55rem;font-size:.8rem;color:var(--muted2);line-height:1.4;}
+.pf-check{color:var(--gold);font-size:.8rem;flex-shrink:0;margin-top:1px;}
+.pf-lock{color:var(--muted);font-size:.72rem;flex-shrink:0;margin-top:2px;}
+.plan-btn{width:calc(100% - 2.4rem);margin:0 1.2rem 1.2rem;padding:.9rem;background:var(--gold);
+  color:var(--black);border:none;border-radius:var(--r);font-family:'Bebas Neue',sans-serif;
+  font-size:1rem;letter-spacing:.2em;cursor:pointer;transition:all .15s;}
+.plan-btn-ghost{background:transparent;color:var(--gold);border:1px solid var(--gold-border);}
+.plan-btn:active{transform:scale(.98);}
+
+.compare-note{padding:.8rem 1.4rem 1.5rem;text-align:center;font-size:.72rem;color:var(--muted);line-height:1.6;}
+
+/* MENTOR SECTION */
+.mentor-box{margin:0 1.4rem 1rem;background:var(--card);border:1px solid var(--gold-border);
+  border-radius:var(--r);padding:1.1rem;display:flex;gap:1rem;align-items:flex-start;}
+.mentor-av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#2a2a2a,#444);
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+  flex-shrink:0;border:2px solid var(--gold-border);}
+.mentor-name{font-weight:600;font-size:.9rem;color:var(--text);}
+.mentor-bio{font-size:.72rem;color:var(--muted2);margin-top:2px;line-height:1.4;}
+
+/* ── PROTOCOLO CRISE ── */
+.crisis-header{padding:1.5rem 1.4rem 1rem;border-bottom:1px solid var(--gold-border);}
+.cr-eyebrow{font-size:.56rem;letter-spacing:.28em;color:#E74C3C;text-transform:uppercase;margin-bottom:.3rem;}
+.cr-title{font-family:'DM Serif Display',serif;font-size:1.85rem;color:var(--text);margin-bottom:.22rem;}
+.flow-wrap{padding:1.2rem 1.4rem;}
+.fstep{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);
+  padding:1.05rem;margin-bottom:.65rem;display:flex;gap:.85rem;cursor:pointer;transition:all .2s;}
+.fstep.act{border-color:var(--gold);background:var(--gold-dim);}
+.f-num{font-family:'Bebas Neue',sans-serif;font-size:1.65rem;color:var(--gold-border);line-height:1;flex-shrink:0;transition:color .2s;}
+.fstep.act .f-num{color:var(--gold);}
+.f-q{font-weight:600;font-size:.87rem;color:var(--text);margin-bottom:.25rem;}
+.f-hint{font-size:.72rem;color:var(--muted2);line-height:1.5;}
+.f-ans{margin-top:.72rem;display:none;}
+.fstep.act .f-ans{display:block;}
+.f-ta{width:100%;background:var(--card2);border:1px solid var(--gold-border);border-radius:8px;
+  padding:.72rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;
+  resize:none;min-height:65px;outline:none;}
+.f-ta:focus{border-color:var(--gold);}
+.cr-opts{display:flex;gap:.45rem;margin-bottom:.58rem;}
+.cr-opt{flex:1;padding:.65rem;background:var(--card2);border:1.5px solid var(--card2);
+  border-radius:8px;text-align:center;cursor:pointer;transition:all .2s;font-weight:600;font-size:.83rem;color:var(--muted2);}
+.cr-opt.sel{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);}
+.diag-box{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);
+  padding:1.15rem;margin-bottom:.65rem;display:none;}
+.diag-box.show{display:block;animation:fadeUp .4s ease;}
+.diag-ey{font-size:.56rem;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;margin-bottom:.3rem;}
+.diag-t{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--text);margin-bottom:.6rem;}
+.diag-steps{display:flex;flex-direction:column;gap:.42rem;}
+.ds{display:flex;gap:.62rem;font-size:.78rem;color:var(--muted2);line-height:1.4;}
+.ds-n{font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:.73rem;flex-shrink:0;margin-top:1px;}
+
+/* ── SCORE ── */
+.score-page-header{padding:1.5rem 1.4rem 1rem;border-bottom:1px solid var(--gold-border);}
+.sp-eyebrow{font-size:.56rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:.28rem;}
+.sp-title{font-family:'DM Serif Display',serif;font-size:1.85rem;color:var(--text);margin-bottom:.22rem;}
+.big-ring-section{display:flex;flex-direction:column;align-items:center;
+  padding:1.7rem 1.4rem 1.2rem;
+  background:linear-gradient(180deg,rgba(200,169,81,.05),transparent);
+  border-bottom:1px solid var(--gold-border);}
+.big-rw{position:relative;width:128px;height:128px;}
+.big-rnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.big-rval{font-family:'Bebas Neue',sans-serif;font-size:2.7rem;color:var(--gold);line-height:1;}
+.big-rlbl{font-size:.56rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;}
+.score-verdict{font-family:'DM Serif Display',serif;font-size:1rem;color:var(--text);margin-top:.65rem;text-align:center;}
+.score-verdict em{color:var(--gold);font-style:italic;}
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:.62rem;padding:1.15rem 1.4rem;}
+.mc{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);padding:.85rem;}
+.mc-val{font-family:'Bebas Neue',sans-serif;font-size:1.85rem;color:var(--gold);line-height:1;}
+.mc-lbl{font-size:.65rem;color:var(--muted2);margin-top:3px;line-height:1.3;}
+.breakdown{padding:0 1.4rem 1.2rem;}
+.br-title{font-family:'Bebas Neue',sans-serif;font-size:.82rem;letter-spacing:.1em;color:var(--text);margin-bottom:.7rem;}
+.br-item{display:flex;align-items:center;gap:.65rem;margin-bottom:.6rem;}
+.br-lbl{font-size:.75rem;color:var(--muted2);flex:1;}
+.br-track{width:68px;height:3px;background:var(--card2);border-radius:2px;}
+.br-fill{height:3px;background:var(--gold);border-radius:2px;transition:width 1s ease;}
+.br-val{font-family:'Bebas Neue',sans-serif;font-size:.78rem;color:var(--gold);width:22px;text-align:right;}
+
+/* PRO ANALYSIS */
+.pro-analysis{margin:0 1.4rem 1.4rem;background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);overflow:hidden;}
+.pa-header{padding:.9rem 1.1rem;border-bottom:1px solid var(--gold-border);display:flex;align-items:center;justify-content:space-between;}
+.pa-title{font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:.08em;color:var(--text);}
+.insight-list{padding:.2rem 0;}
+.insight-item{padding:.78rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:.8rem;align-items:flex-start;}
+.insight-item:last-child{border-bottom:none;}
+.insight-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
+.insight-text{font-size:.78rem;color:var(--muted2);line-height:1.4;}
+.insight-text strong{color:var(--text);}
+
+/* MODAL OVERLAY */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;
+  display:none;align-items:flex-end;backdrop-filter:blur(5px);}
+#modal.open{display:flex;}
+.modal-sheet{background:var(--dark);border-top:1px solid var(--gold-border);
+  border-radius:20px 20px 0 0;padding:1.3rem;width:100%;max-height:82vh;overflow-y:auto;
+  animation:slideUp .35s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:32px;height:3px;background:var(--gold-border);border-radius:2px;margin:0 auto 1.3rem;}
+
+/* TOAST */
+#toast{position:fixed;bottom:5.1rem;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--gold);color:var(--black);padding:.52rem 1.25rem;border-radius:30px;
+  font-family:'Bebas Neue',sans-serif;font-size:.8rem;letter-spacing:.14em;
+  opacity:0;transition:all .3s;pointer-events:none;z-index:9997;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── WELCOME SCREEN ── */
+#screen-welcome{background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 2rem;}
+.wc-logo{font-family:'Bebas Neue',sans-serif;font-size:5rem;letter-spacing:.25em;color:var(--gold);
+  animation:breathe 2.5s ease-in-out infinite;margin-bottom:.5rem;}
+.wc-line{width:40px;height:1px;background:var(--gold-border);margin:.6rem auto 1rem;}
+.wc-by{font-size:.6rem;letter-spacing:.35em;color:var(--muted);text-transform:uppercase;margin-bottom:3rem;}
+.wc-title{font-family:'DM Serif Display',serif;font-size:1.9rem;line-height:1.2;
+  color:var(--text);text-align:center;margin-bottom:.7rem;}
+.wc-title em{color:var(--gold);font-style:italic;}
+.wc-desc{font-size:.85rem;color:var(--muted2);line-height:1.7;text-align:center;margin-bottom:2.5rem;max-width:280px;}
+.wc-pills{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:2.5rem;}
+.wc-pill{font-size:.68rem;padding:.32rem .75rem;border-radius:20px;
+  background:var(--card);border:1px solid var(--gold-border);color:var(--muted2);
+  font-family:'Bebas Neue',sans-serif;letter-spacing:.1em;}
+.wc-pill.hi{color:var(--gold);border-color:var(--gold);}
+
+/* ── TOUR OVERLAY ── */
+#tour-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:400;
+  display:none;flex-direction:column;align-items:center;justify-content:flex-end;
+  backdrop-filter:blur(6px);}
+#tour-overlay.open{display:flex;}
+.tour-sheet{background:var(--dark);border-top:1px solid var(--gold-border);
+  border-radius:20px 20px 0 0;width:100%;padding:1.6rem 1.5rem 2rem;
+  animation:slideUp .4s ease;}
+.tour-step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:1.4rem;}
+.tour-dot{width:6px;height:6px;border-radius:50%;background:var(--card2);transition:background .3s,width .3s;border-radius:3px;}
+.tour-dot.active{background:var(--gold);width:18px;}
+.tour-icon{font-size:2.2rem;margin-bottom:.7rem;text-align:center;}
+.tour-title{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--text);
+  margin-bottom:.5rem;text-align:center;}
+.tour-title em{color:var(--gold);font-style:italic;}
+.tour-desc{font-size:.85rem;color:var(--muted2);line-height:1.7;text-align:center;
+  margin-bottom:1.5rem;max-width:300px;margin-left:auto;margin-right:auto;}
+.tour-highlight{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);
+  padding:.9rem 1.1rem;margin-bottom:1.4rem;}
+.tour-hl-item{display:flex;align-items:flex-start;gap:.7rem;margin-bottom:.6rem;font-size:.8rem;color:var(--muted2);line-height:1.4;}
+.tour-hl-item:last-child{margin-bottom:0;}
+.tour-hl-icon{font-size:.95rem;flex-shrink:0;margin-top:1px;}
+.tour-hl-item strong{color:var(--text);}
+.tour-nav{display:flex;gap:.7rem;}
+.tour-skip{flex:0;padding:.85rem 1rem;background:transparent;color:var(--muted);
+  border:1px solid var(--card2);border-radius:var(--r);font-family:'Bebas Neue',sans-serif;
+  font-size:.82rem;letter-spacing:.12em;cursor:pointer;white-space:nowrap;}
+.tour-next{flex:1;padding:.85rem;background:var(--gold);color:var(--black);border:none;
+  border-radius:var(--r);font-family:'Bebas Neue',sans-serif;font-size:.95rem;
+  letter-spacing:.18em;cursor:pointer;transition:all .15s;}
+.tour-next:active{transform:scale(.98);}
+
+
+/* ── SUPORTE ── */
+.suporte-hero{padding:1.5rem 1.4rem 1rem;border-bottom:1px solid var(--gold-border);}
+.suporte-title{font-family:'DM Serif Display',serif;font-size:1.85rem;color:var(--text);margin-bottom:.22rem;}
+.suporte-sub{font-size:.8rem;color:var(--muted2);line-height:1.5;}
+.contact-cards{display:flex;flex-direction:column;gap:.65rem;padding:1.2rem 1.4rem;}
+.contact-card{background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);
+  padding:1.1rem 1.2rem;display:flex;align-items:center;gap:1rem;cursor:pointer;
+  transition:all .2s;text-decoration:none;}
+.contact-card:active{transform:scale(.98);background:var(--gold-dim);}
+.contact-card-icon{font-size:1.6rem;flex-shrink:0;width:42px;height:42px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--card2);border-radius:10px;}
+.contact-card-info{flex:1;}
+.contact-card-title{font-weight:600;font-size:.9rem;color:var(--text);}
+.contact-card-desc{font-size:.72rem;color:var(--muted2);margin-top:2px;}
+.contact-card-arrow{color:var(--gold);font-size:1rem;flex-shrink:0;}
+.form-section{padding:0 1.4rem 1.4rem;}
+.form-section-title{font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:.1em;
+  color:var(--text);margin-bottom:.7rem;margin-top:1.2rem;}
+.form-field{margin-bottom:.75rem;}
+.form-label{font-size:.58rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;
+  display:block;margin-bottom:.35rem;}
+.form-input{width:100%;background:var(--card);border:1px solid var(--gold-border);
+  border-radius:10px;padding:.72rem .9rem;color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;}
+.form-input:focus{border-color:var(--gold);}
+textarea.form-input{resize:none;min-height:110px;line-height:1.5;}
+select.form-input{cursor:pointer;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C8A951' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .9rem center;}
+
+/* ── MENTORIA ── */
+.mentoria-hero{padding:1.5rem 1.4rem 1rem;border-bottom:1px solid var(--gold-border);}
+.mentoria-page-title{font-family:'DM Serif Display',serif;font-size:1.85rem;color:var(--text);margin-bottom:.22rem;}
+.mentoria-page-sub{font-size:.8rem;color:var(--muted2);line-height:1.5;}
+.mentoria-plan-tag{display:inline-flex;align-items:center;gap:.4rem;
+  font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:.12em;
+  color:var(--black);background:var(--gold);padding:.22rem .75rem;
+  border-radius:20px;margin-top:.5rem;}
+.next-call-card{margin:1.2rem 1.4rem;background:linear-gradient(135deg,rgba(200,169,81,.1),rgba(200,169,81,.03));
+  border:1px solid var(--gold);border-radius:var(--r);padding:1.2rem;position:relative;overflow:hidden;}
+.next-call-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+  border-radius:50%;background:radial-gradient(circle,rgba(200,169,81,.15),transparent 70%);}
+.next-call-eyebrow{font-size:.56rem;letter-spacing:.25em;color:var(--gold);text-transform:uppercase;margin-bottom:.3rem;}
+.next-call-date{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.08em;color:var(--text);margin-bottom:.2rem;}
+.next-call-type{font-size:.75rem;color:var(--muted2);}
+.mentoria-actions{display:flex;flex-direction:column;gap:.65rem;padding:0 1.4rem;}
+.mentoria-action-card{background:var(--card);border:1px solid var(--gold-border);
+  border-radius:var(--r);padding:1.1rem 1.2rem;cursor:pointer;transition:all .2s;}
+.mentoria-action-card:active{transform:scale(.98);}
+.ma-header{display:flex;align-items:center;gap:.9rem;margin-bottom:0;}
+.ma-icon{font-size:1.3rem;flex-shrink:0;}
+.ma-title{font-weight:600;font-size:.88rem;color:var(--text);}
+.ma-desc{font-size:.72rem;color:var(--muted2);margin-top:2px;}
+.ma-body{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+.mentoria-action-card.open .ma-body{max-height:500px;}
+.mentoria-action-card.open{border-color:var(--gold);background:var(--gold-dim);}
+.ma-body-inner{padding:.8rem 0 .2rem;}
+.mentoria-lock{margin:1.2rem 1.4rem;background:var(--card);border:1px solid var(--gold-border);
+  border-radius:var(--r);padding:1.4rem;text-align:center;}
+
+</style>
+
+  <!-- PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ORDO">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="ORDO — Sua ordem contra o caos. Sistema 3R por Rafael Espadim.">
+  <link rel="manifest" href="manifest.json">
+  <!-- Apple touch icons -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-startup-image" href="icon-512.png">
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-logo">ORDO</div>
+  <div class="splash-line"></div>
+  <div class="splash-sub">by Sistema 3R · Rafael Espadim</div>
+</div>
+
+<div id="app">
+
+<!-- ══ WELCOME ══ -->
+<div class="screen" id="screen-welcome">
+  <div class="wc-logo">ORDO</div>
+  <div class="wc-line"></div>
+  <div class="wc-by">by Sistema 3R · Rafael Espadim</div>
+  <div class="wc-title">A estrutura que<br>falta na sua <em>rotina.</em></div>
+  <div class="wc-desc">Não é mais um app de hábitos. É o sistema operacional para quem cansa de começar forte e abandonar.</div>
+  <div class="wc-pills">
+    <div class="wc-pill hi">Diagnóstico de perfil</div>
+    <div class="wc-pill hi">Semana Blindada</div>
+    <div class="wc-pill hi">Protocolo de Crise</div>
+    <div class="wc-pill">Score de Consistência</div>
+    <div class="wc-pill">Rotina personalizada</div>
+  </div>
+  <button class="btn-main" style="max-width:320px;width:100%" onclick="startOnboarding()">COMEÇAR AGORA</button>
+  <div style="margin-top:.9rem;font-size:.72rem;color:var(--muted);text-align:center;">7 dias grátis · Sem cartão de crédito</div>
+</div>
+
+<!-- ══ ONBOARDING ══ -->
+<div class="screen" id="screen-onboarding">
+<div class="ob-wrap">
+
+  <div class="ob-step active" id="ob0">
+    <div class="step-bar"><div class="step-dot done"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+    <div class="ob-title">Ordem não<br>se motiva.<br><em>Se executa.</em></div>
+    <div class="ob-desc">Estrutura operacional para quem tem trabalho, treino e projetos ao mesmo tempo.</div>
+    <div style="background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);padding:.95rem;margin-bottom:1.5rem;">
+      <div style="font-size:.58rem;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;margin-bottom:.35rem;">7 dias grátis · Depois escolha</div>
+      <div style="font-size:.77rem;color:var(--muted2);line-height:1.5;">Trial completo. Desbloqueie tudo para testar antes de decidir.</div>
+    </div>
+    <button class="btn-main" onclick="obNext(1)">COMEÇAR DIAGNÓSTICO</button>
+  </div>
+
+  <div class="ob-step" id="ob1">
+    <div class="step-bar"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+    <div class="step-ctr">Diagnóstico · 1 de 3</div>
+    <div class="ob-title">Onde você<br><em>sempre</em> trava?</div>
+    <div class="choices" id="cg1">
+      <div class="choice" onclick="pick(this,'c1','sobrecarga','cg1','btn1')"><div class="c-icon">🌊</div><div><div class="c-lbl">Sobrecarga</div><div class="c-sub">Começo bem, mas quando a semana enche, tudo cai.</div></div></div>
+      <div class="choice" onclick="pick(this,'c1','perfeccionismo','cg1','btn1')"><div class="c-icon">🎯</div><div><div class="c-lbl">Perfeccionismo</div><div class="c-sub">Se não der para fazer 100%, prefiro não fazer.</div></div></div>
+      <div class="choice" onclick="pick(this,'c1','dispersao','cg1','btn1')"><div class="c-icon">🌀</div><div><div class="c-lbl">Dispersão</div><div class="c-sub">Começo várias coisas e nenhuma fica de pé.</div></div></div>
+      <div class="choice" onclick="pick(this,'c1','motivacao','cg1','btn1')"><div class="c-icon">⚡</div><div><div class="c-lbl">Dependência de ânimo</div><div class="c-sub">Só executo quando estou com vontade.</div></div></div>
+    </div>
+    <button class="btn-main" id="btn1" onclick="obNext(2)" disabled>CONTINUAR</button>
+  </div>
+
+  <div class="ob-step" id="ob2">
+    <div class="step-bar"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+    <div class="step-ctr">Diagnóstico · 2 de 3</div>
+    <div class="ob-title">Qual é a sua<br><em>realidade</em>?</div>
+    <div class="choices" id="cg2">
+      <div class="choice" onclick="pick(this,'c2','atleta','cg2','btn2')"><div class="c-icon">🏅</div><div><div class="c-lbl">Atleta + Profissional</div><div class="c-sub">Treino e trabalho competindo pelo mesmo tempo.</div></div></div>
+      <div class="choice" onclick="pick(this,'c2','empreendedor','cg2','btn2')"><div class="c-icon">🚀</div><div><div class="c-lbl">Empreendedor / Autônomo</div><div class="c-sub">Horários flexíveis demais — e isso é o problema.</div></div></div>
+      <div class="choice" onclick="pick(this,'c2','executivo','cg2','btn2')"><div class="c-icon">💼</div><div><div class="c-lbl">Executivo / CLT exigente</div><div class="c-sub">Agenda cheia, reuniões imprevisíveis.</div></div></div>
+      <div class="choice" onclick="pick(this,'c2','estudante','cg2','btn2')"><div class="c-icon">📚</div><div><div class="c-lbl">Estudante / Múltiplos projetos</div><div class="c-sub">Provas, estágio, treino e ainda a sanidade.</div></div></div>
+    </div>
+    <button class="btn-main" id="btn2" onclick="obNext(3)" disabled>CONTINUAR</button>
+  </div>
+
+  <div class="ob-step" id="ob3">
+    <div class="step-bar"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot"></div></div>
+    <div class="step-ctr">Diagnóstico · 3 de 3</div>
+    <div class="ob-title">O que você<br>precisa <em>agora</em>?</div>
+    <div class="choices" id="cg3">
+      <div class="choice" onclick="pick(this,'c3','estrutura','cg3','btn3')"><div class="c-icon">🏗️</div><div><div class="c-lbl">Estrutura de rotina</div><div class="c-sub">Montar uma semana que funcione de verdade.</div></div></div>
+      <div class="choice" onclick="pick(this,'c3','consistencia','cg3','btn3')"><div class="c-icon">🔗</div><div><div class="c-lbl">Consistência no treino</div><div class="c-sub">Parar de falhar e retomar em loop.</div></div></div>
+      <div class="choice" onclick="pick(this,'c3','pressao','cg3','btn3')"><div class="c-icon">⚙️</div><div><div class="c-lbl">Performance sob pressão</div><div class="c-sub">Entregar mesmo quando a semana é uma bagunça.</div></div></div>
+    </div>
+    <button class="btn-main" id="btn3" onclick="obNext(4)" disabled>VER MEU PERFIL</button>
+  </div>
+
+  <div class="ob-step" id="ob4">
+    <div class="step-bar"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div></div>
+    <div class="ob-title">Seu<br><em>Perfil</em> 3R.</div>
+    <div id="profile-card" class="profile-card"></div>
+    <div style="background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);padding:.92rem;margin-bottom:1.3rem;">
+      <div style="font-size:.56rem;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:.32rem;">Rotina gerada para seu perfil</div>
+      <div style="font-size:.78rem;color:var(--muted2);line-height:1.5;">A Semana Blindada já foi montada com base no que você respondeu. Seus horários, você ajusta depois.</div>
+    </div>
+    <button class="btn-main" onclick="enterApp()">ENTRAR NO ORDO</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ══ HOME ══ -->
+<div class="screen" id="screen-home">
+  <div class="app-header">
+    <div class="header-logo">ORDO</div>
+    <div style="display:flex;align-items:center;gap:.45rem;">
+      <div class="score-num-badge" id="hdr-score">0</div>
+      <div id="hdr-plan-badge" class="free-badge" onclick="goTo('upgrade')">FREE</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="home-hero">
+      <div class="h-greet" id="home-date">Hoje</div>
+      <div class="h-title">Execute.<br>Sem <em>desculpa.</em></div>
+    </div>
+
+    <div class="score-strip">
+      <div class="ring-wrap">
+        <svg class="ring-svg" width="66" height="66" viewBox="0 0 66 66">
+          <circle class="ring-bg" cx="33" cy="33" r="28"/>
+          <circle class="ring-fill" id="mini-ring" cx="33" cy="33" r="28"/>
+        </svg>
+        <div class="ring-num" id="mini-score">0</div>
+      </div>
+      <div>
+        <div class="score-lbl">SCORE DE CONSISTÊNCIA</div>
+        <div class="score-msg" id="score-msg">Complete hábitos para subir seu score.</div>
+        <div class="score-trend" id="score-trend">↑ construindo...</div>
+      </div>
+    </div>
+
+    <!-- UPGRADE STRIP (só FREE) -->
+    <div class="upgrade-strip" id="upgrade-strip" style="margin-top:1.25rem;">
+      <div class="upgrade-strip-icon">🔓</div>
+      <div class="upgrade-strip-text">
+        <div class="upgrade-strip-title">Trial de 7 dias ativo</div>
+        <div class="upgrade-strip-sub" id="trial-sub">Desbloqueie o ORDO completo</div>
+      </div>
+      <button class="upgrade-strip-btn" onclick="goTo('upgrade')">VER PLANOS</button>
+    </div>
+
+    <div class="sec-lbl">Rotina de Hoje</div>
+    <div class="habits-list">
+
+      <!-- TREINO -->
+      <div class="habit-row" id="hr-treino">
+        <div class="hbar"></div>
+        <div class="habit-hdr" onclick="toggleExp('treino')">
+          <div class="h-emoji">🏋️</div>
+          <div class="h-info"><div class="h-name">Treino</div><div class="h-hint">Toque para registrar</div></div>
+          <div class="h-status s-none" id="st-treino">REGISTRAR</div>
+        </div>
+        <div class="habit-expand" id="exp-treino">
+          <div class="habit-expand-in">
+            <div class="t-opts">
+              <div class="t-opt" id="to-ok" onclick="setTreino('ok')"><div class="t-opt-icon">✅</div><div class="t-opt-lbl">Completo</div></div>
+              <div class="t-opt" id="to-par" onclick="setTreino('par')"><div class="t-opt-icon">⚡</div><div class="t-opt-lbl">Parcial</div></div>
+              <div class="t-opt" id="to-bad" onclick="setTreino('bad')"><div class="t-opt-icon">❌</div><div class="t-opt-lbl">Não fiz</div></div>
+            </div>
+            <div class="dur-row" id="dur-row">
+              <div class="dur-lbl">Duração</div>
+              <input type="range" id="dur-sl" min="10" max="120" step="5" value="45"
+                oninput="document.getElementById('dur-v').textContent=this.value+'min'">
+              <div class="dur-val" id="dur-v">45min</div>
+            </div>
+
+            <!-- PRO FIELD: Notas de treino -->
+            <div id="treino-pro-field">
+              <div class="pro-field">
+                <div class="pro-field-lbl">📝 Notas do Treino <span class="pro-badge-sm" id="note-badge">PRO</span></div>
+                <div id="treino-note-wrap">
+                  <textarea class="si" id="treino-nota" placeholder="Ex: foco no agachamento, bateu PR, deu câimbra..." style="min-height:52px;"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <button class="save-btn" onclick="saveTreino()">SALVAR TREINO</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SONO -->
+      <div class="habit-row" id="hr-sono">
+        <div class="hbar"></div>
+        <div class="habit-hdr" onclick="toggleExp('sono')">
+          <div class="h-emoji">😴</div>
+          <div class="h-info"><div class="h-name">Sono</div><div class="h-hint">Toque para registrar</div></div>
+          <div class="h-status s-none" id="st-sono">REGISTRAR</div>
+        </div>
+        <div class="habit-expand" id="exp-sono">
+          <div class="habit-expand-in">
+            <div class="sono-qual">
+              <div class="sq" id="sq-otimo" onclick="setSQ('otimo')"><div class="sq-icon">😴</div><div class="sq-lbl">Ótimo</div></div>
+              <div class="sq" id="sq-ok" onclick="setSQ('ok')"><div class="sq-icon">😐</div><div class="sq-lbl">Ok</div></div>
+              <div class="sq" id="sq-ruim" onclick="setSQ('ruim')"><div class="sq-icon">😫</div><div class="sq-lbl">Ruim</div></div>
+            </div>
+            <div class="sono-row">
+              <div class="si-wrap"><label class="si-lbl">Dormiu às</label><input type="time" class="si" id="sono-hora" value="22:30"></div>
+              <div class="si-wrap"><label class="si-lbl">Horas dormidas</label><input type="number" class="si" id="sono-h" min="1" max="14" value="7"></div>
+            </div>
+            <label class="si-lbl">Observações</label>
+            <textarea class="si" id="sono-nota" placeholder="Ex: acordei 3x, pesadelo, dormiu profundo..."></textarea>
+            <button class="save-btn" style="margin-top:.65rem" onclick="saveSono()">SALVAR SONO</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HÁBITOS -->
+      <div class="habit-row" id="hr-hab">
+        <div class="hbar"></div>
+        <div class="habit-hdr" onclick="toggleExp('hab')">
+          <div class="h-emoji">📋</div>
+          <div class="h-info"><div class="h-name">Hábitos do Dia</div><div class="h-hint">Clareza, hidratação, planejamento</div></div>
+          <div class="h-status s-none" id="st-hab">0/3</div>
+        </div>
+        <div class="habit-expand" id="exp-hab">
+          <div class="habit-expand-in">
+            <div class="tog-row" onclick="togHab(this,'clareza')"><span class="tog-lbl">🧠 Clareza mental (5 min)</span><div class="tog" id="tog-clareza"></div></div>
+            <div class="tog-row" onclick="togHab(this,'hidra')"><span class="tog-lbl">💧 Hidratação (2L)</span><div class="tog" id="tog-hidra"></div></div>
+            <div class="tog-row" onclick="togHab(this,'plano')"><span class="tog-lbl">📅 Revisão da semana blindada</span><div class="tog" id="tog-plano"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="sec-lbl" style="margin-top:1.3rem;">Protocolo Rápido</div>
+    <div style="margin:0 1.4rem;">
+      <div style="background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);padding:1.05rem;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:.08em;color:var(--text);margin-bottom:.28rem;">🚨 Semana apertou?</div>
+        <div style="font-size:.74rem;color:var(--muted2);line-height:1.5;margin-bottom:.72rem;">3 perguntas. 1 diagnóstico. 1 ação. Sem julgamento.</div>
+        <button class="btn-ghost" style="margin:0" onclick="goTo('crise')">ATIVAR PROTOCOLO DE CRISE</button>
+      </div>
+    </div>
+    <div style="height:1rem;"></div>
+  </div>
+</div>
+
+<!-- ══ SEMANA BLINDADA ══ -->
+<div class="screen" id="screen-semana">
+  <div class="app-header">
+    <div class="header-logo">ORDO</div>
+    <div id="hdr-plan-badge-2" class="free-badge" onclick="goTo('upgrade')">FREE</div>
+  </div>
+  <div class="scroll-area">
+    <div class="week-header">
+      <div class="wk-eyebrow">Semana Blindada</div>
+      <div class="wk-title">Arraste seus<br>blocos</div>
+      <div class="wk-sub">Rotina gerada para o seu perfil. Arraste para ajustar os horários.</div>
+    </div>
+    <div class="week-days" id="week-days"></div>
+
+    <!-- Rotina gerada por perfil -->
+    <div class="rotina-gerada" id="rotina-gerada-card">
+      <div class="rg-header">
+        <div class="rg-title" id="rg-title-txt">ROTINA GERADA</div>
+        <div class="rg-badge">PRO</div>
+      </div>
+      <div id="rg-items"><!-- gerado por JS --></div>
+    </div>
+
+    <div class="tl-section">
+      <div class="tl-lbl">Ajuste os horários — arraste</div>
+      <div class="tl-wrap">
+        <div class="tl-track" id="tl-track">
+          <div id="tl-ruler"></div>
+        </div>
+        <div class="tl-hint"><span>☝️</span> Arraste para personalizar seus horários reais</div>
+      </div>
+    </div>
+
+    <div class="contingency-box">
+      <div class="cg-tag">⚡ Protocolo de Contingência</div>
+      <div class="cg-title">Semana apertou?</div>
+      <div class="cg-desc">Reduza para o mínimo de cada bloco. <strong style="color:var(--gold)">20% feito > zero feito.</strong> A sequência não quebra com parcial.</div>
+    </div>
+    <div style="height:1rem;"></div>
+  </div>
+</div>
+
+<!-- ══ UPGRADE ══ -->
+<div class="screen" id="screen-upgrade">
+  <div class="app-header">
+    <div class="header-logo">ORDO</div>
+    <div class="pro-badge">PLANOS</div>
+  </div>
+  <div class="scroll-area">
+    <div class="up-header">
+      <div class="up-eyebrow">Sistema 3R · Rafael Espadim</div>
+      <div class="up-title">Escolha seu<br>nível.</div>
+      <div class="up-sub">O app é sua ferramenta. A mentoria é sua aceleração.</div>
+    </div>
+
+    <!-- UNLOCK BANNER: shown when already PRO -->
+    <div id="pro-active-banner" style="display:none;margin:0 1.4rem 1rem;">
+      <div style="background:linear-gradient(135deg,rgba(200,169,81,.15),rgba(200,169,81,.05));
+        border:1px solid var(--gold);border-radius:var(--r);padding:1.2rem;
+        display:flex;align-items:center;gap:1rem;">
+        <div style="font-size:2rem;flex-shrink:0;">🔓</div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;
+            color:var(--gold);margin-bottom:2px;" id="active-plan-label">ORDO PRO ATIVO</div>
+          <div style="font-size:.75rem;color:var(--muted2);">Todas as funcionalidades desbloqueadas.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CODE UNLOCK BOX -->
+    <div id="code-unlock-box" style="margin:0 1.4rem 1rem;">
+      <div style="background:var(--card);border:1px solid var(--gold-border);border-radius:var(--r);padding:1.1rem;">
+        <div style="font-size:.58rem;letter-spacing:.24em;color:var(--gold);text-transform:uppercase;margin-bottom:.5rem;">
+          Já comprou? Ative aqui
+        </div>
+        <div style="font-size:.78rem;color:var(--muted2);margin-bottom:.8rem;line-height:1.5;">
+          Após o pagamento na Kiwify você recebe um código por e-mail. Cole aqui para ativar seu plano.
+        </div>
+        <div style="display:flex;gap:.5rem;">
+          <input type="text" id="unlock-code-input" placeholder="Cole seu código aqui"
+            style="flex:1;background:var(--card2);border:1px solid var(--gold-border);
+            border-radius:8px;padding:.65rem .8rem;color:var(--text);
+            font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;"
+            oninput="this.style.borderColor='var(--gold-border)'"
+            onkeydown="if(event.key==='Enter')activateCode()">
+          <button onclick="activateCode()"
+            style="background:var(--gold);color:var(--black);border:none;border-radius:8px;
+            padding:.65rem 1rem;font-family:'Bebas Neue',sans-serif;font-size:.88rem;
+            letter-spacing:.12em;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+            ATIVAR
+          </button>
+        </div>
+        <div id="code-msg" style="font-size:.72rem;margin-top:.5rem;min-height:1rem;"></div>
+      </div>
+    </div>
+
+    <div class="mentor-box">
+      <div class="mentor-av">🪖</div>
+      <div>
+        <div class="mentor-name">Rafael Espadim</div>
+        <div class="mentor-bio">Militar · Triatleta · Ed. Física & Psicologia do Esporte. Performance sob pressão — manter o que precisa ser feito mesmo com pouco tempo.</div>
+      </div>
+    </div>
+
+    <div class="plan-cards">
+
+      <!-- FREE -->
+      <div class="plan-card">
+        <div class="plan-top">
+          <div class="plan-tag">Plano</div>
+          <div class="plan-name">Free</div>
+          <div class="plan-price">R$0 <span>/ sempre</span></div>
+        </div>
+        <div class="plan-divider"></div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-check">✓</div>Diagnóstico de perfil</div>
+          <div class="pf"><div class="pf-check">✓</div>Registro diário (treino, sono, hábitos)</div>
+          <div class="pf"><div class="pf-check">✓</div>Score de consistência básico</div>
+          <div class="pf"><div class="pf-check">✓</div>Protocolo de crise (3 perguntas)</div>
+          <div class="pf"><div class="pf-check">✓</div>Semana blindada (ajuste manual)</div>
+          <div class="pf"><div class="pf-check">✓</div>Comunidade A Ordem 3R</div>
+          <div class="pf" style="opacity:.45;"><div class="pf-lock">🔒</div>Rotina gerada por perfil</div>
+          <div class="pf" style="opacity:.45;"><div class="pf-lock">🔒</div>Notas de treino & análise semanal</div>
+          <div class="pf" style="opacity:.45;"><div class="pf-lock">🔒</div>Protocolos de crise avançados</div>
+          <div class="pf" style="opacity:.45;"><div class="pf-lock">🔒</div>Insights personalizados de score</div>
+        </div>
+        <button class="plan-btn plan-btn-ghost" onclick="setPlan('free')">CONTINUAR GRÁTIS</button>
+      </div>
+
+      <!-- PRO APP -->
+      <div class="plan-card featured">
+        <div class="plan-featured-bar">MAIS POPULAR</div>
+        <div class="plan-top">
+          <div class="plan-tag">Plano</div>
+          <div class="plan-name">ORDO Pro</div>
+          <div class="plan-price">R$29 <span>/ mês</span></div>
+        </div>
+        <div class="plan-divider"></div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-check">✓</div>Tudo do Free</div>
+          <div class="pf"><div class="pf-check">✓</div><strong>Rotina gerada automaticamente</strong> pelo seu perfil</div>
+          <div class="pf"><div class="pf-check">✓</div>Notas de treino + histórico completo</div>
+          <div class="pf"><div class="pf-check">✓</div>Análise semanal de score</div>
+          <div class="pf"><div class="pf-check">✓</div>Protocolos de crise avançados</div>
+          <div class="pf"><div class="pf-check">✓</div>Insights personalizados por perfil</div>
+          <div class="pf"><div class="pf-check">✓</div>Templates de semana por perfil</div>
+          <div class="pf" style="opacity:.45;"><div class="pf-lock">🔒</div>Calls ao vivo com Rafael</div>
+        </div>
+        <button class="plan-btn" onclick="setPlan('pro')">ASSINAR ORDO PRO</button>
+      </div>
+
+      <!-- MENTORIA GRUPO -->
+      <div class="plan-card">
+        <div class="plan-top">
+          <div class="plan-tag">Mentoria em Grupo</div>
+          <div class="plan-name">Cohort 8 semanas</div>
+          <div class="plan-price">R$197 <span>/ cohort</span></div>
+        </div>
+        <div class="plan-divider"></div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-check">✓</div>Tudo do ORDO Pro incluso</div>
+          <div class="pf"><div class="pf-check">✓</div>1 call semanal ao vivo em grupo</div>
+          <div class="pf"><div class="pf-check">✓</div>Módulos progressivos com templates</div>
+          <div class="pf"><div class="pf-check">✓</div>Comunidade A Ordem 3R</div>
+          <div class="pf"><div class="pf-check">✓</div>Canal de perguntas 24h</div>
+        </div>
+        <button class="plan-btn" onclick="setPlan('grupo')">ENTRAR NO GRUPO</button>
+      </div>
+
+      <!-- MENTORIA INDIVIDUAL -->
+      <div class="plan-card">
+        <div class="plan-top">
+          <div class="plan-tag">Mentoria Individual</div>
+          <div class="plan-name">1 a 1 com Rafael</div>
+          <div class="plan-price">R$497 <span>/ mês</span></div>
+        </div>
+        <div class="plan-divider"></div>
+        <div class="plan-features">
+          <div class="pf"><div class="pf-check">✓</div>Tudo do Cohort incluso</div>
+          <div class="pf"><div class="pf-check">✓</div>Diagnóstico profundo individual</div>
+          <div class="pf"><div class="pf-check">✓</div>Plano de ação 100% personalizado</div>
+          <div class="pf"><div class="pf-check">✓</div>Calls semanais 1:1</div>
+          <div class="pf"><div class="pf-check">✓</div>Suporte via WhatsApp direto</div>
+          <div class="pf"><div class="pf-check">✓</div>Protocolo de contingência individual</div>
+        </div>
+        <button class="plan-btn" onclick="setPlan('individual')">QUERO VAGA INDIVIDUAL</button>
+      </div>
+
+    </div>
+    <div class="compare-note">Você pode cancelar o Pro a qualquer momento.<br>Mentorias têm vagas limitadas por cohort.</div>
+  </div>
+</div>
+
+<!-- ══ CRISE ══ -->
+<div class="screen" id="screen-crise">
+  <div class="app-header">
+    <div class="header-logo">ORDO</div>
+    <div class="free-badge" style="color:#E74C3C;border-color:rgba(231,76,60,.3);">🚨 CRISE</div>
+  </div>
+  <div class="scroll-area">
+    <div class="crisis-header">
+      <div class="cr-eyebrow">Protocolo de Crise</div>
+      <div class="cr-title">O que está<br>travando?</div>
+      <div style="font-size:.8rem;color:var(--muted2);line-height:1.5;margin-top:.22rem;">3 perguntas. 1 diagnóstico. 1 ação. Sem julgamento.</div>
+    </div>
+    <div class="flow-wrap">
+
+      <div class="fstep act" id="fs0" onclick="actFS(0)">
+        <div class="f-num">01</div>
+        <div style="flex:1;">
+          <div class="f-q">O que exatamente travou?</div>
+          <div class="f-hint">Seja específico — não "tudo". Qual foi o ponto de quebra?</div>
+          <div class="f-ans">
+            <textarea class="f-ta" id="cq1" placeholder="Ex: reunião atrasou e perdi a janela do treino..."></textarea>
+            <button class="btn-main" style="margin-top:.58rem" onclick="actFS(1)">PRÓXIMO →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="fstep" id="fs1" onclick="actFS(1)">
+        <div class="f-num">02</div>
+        <div style="flex:1;">
+          <div class="f-q">Você tem 15 minutos agora?</div>
+          <div class="f-hint">Não para resolver tudo. Para não quebrar a sequência.</div>
+          <div class="f-ans">
+            <div class="cr-opts">
+              <div class="cr-opt" id="co-sim" onclick="setCO('sim')">✅ Sim, tenho</div>
+              <div class="cr-opt" id="co-nao" onclick="setCO('nao')">❌ Não tenho</div>
+            </div>
+            <button class="btn-main" onclick="actFS(2)">PRÓXIMO →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="fstep" id="fs2" onclick="actFS(2)">
+        <div class="f-num">03</div>
+        <div style="flex:1;">
+          <div class="f-q">Qual é a menor ação possível?</div>
+          <div class="f-hint">20 min de treino? 5 min de planejamento? Nomear é o primeiro passo.</div>
+          <div class="f-ans">
+            <textarea class="f-ta" id="cq3" placeholder="Ex: 20 min de corrida antes do jantar..."></textarea>
+            <button class="btn-main" style="margin-top:.58rem" onclick="genDiag()">GERAR DIAGNÓSTICO</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="diag-box" id="diag-box">
+        <div class="diag-ey">⚡ Seu Protocolo de Ação</div>
+        <div class="diag-t" id="diag-t"></div>
+        <div class="diag-steps" id="diag-st"></div>
+        <button class="btn-main" style="margin-top:.95rem" onclick="S.crises++;saveState();renderScore();showToast('Protocolo registrado! Vai lá 💪')">REGISTRAR E EXECUTAR</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCORE ══ -->
+<div class="screen" id="screen-score">
+  <div class="app-header">
+    <div class="header-logo">ORDO</div>
+    <div id="hdr-plan-badge-3" class="free-badge" onclick="goTo('upgrade')">FREE</div>
+  </div>
+  <div class="scroll-area">
+    <div class="score-page-header">
+      <div class="sp-eyebrow">Índice ORDO</div>
+      <div class="sp-title">Score de<br>Consistência</div>
+      <div style="font-size:.8rem;color:var(--muted2);margin-top:.22rem;">Não mede perfeição. Mede operação real.</div>
+    </div>
+    <div class="big-ring-section">
+      <div class="big-rw">
+        <svg style="transform:rotate(-90deg)" width="128" height="128" viewBox="0 0 128 128">
+          <circle style="fill:none;stroke:var(--card2);stroke-width:7;" cx="64" cy="64" r="55"/>
+          <circle id="big-ring" style="fill:none;stroke:var(--gold);stroke-width:7;stroke-linecap:round;
+            stroke-dasharray:346;stroke-dashoffset:346;transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1);"
+            cx="64" cy="64" r="55"/>
+        </svg>
+        <div class="big-rnum"><div class="big-rval" id="big-score">0</div><div class="big-rlbl">/ 100</div></div>
+      </div>
+      <div class="score-verdict" id="score-verdict">Complete hábitos para <em>construir</em> seu score</div>
+    </div>
+    <div class="metrics-grid">
+      <div class="mc"><div class="mc-val" id="m-dias">0</div><div class="mc-lbl">Dias com registro</div></div>
+      <div class="mc"><div class="mc-val" id="m-treino">0%</div><div class="mc-lbl">Taxa de treino</div></div>
+      <div class="mc"><div class="mc-val" id="m-sono">—</div><div class="mc-lbl">Sono médio</div></div>
+      <div class="mc"><div class="mc-val" id="m-crise">0</div><div class="mc-lbl">Crises superadas</div></div>
+    </div>
+    <div class="breakdown">
+      <div class="br-title">COMPOSIÇÃO DO SCORE</div>
+      <div class="br-item"><div class="br-lbl">Freq. de registros</div><div class="br-track"><div class="br-fill" id="br-freq" style="width:0%"></div></div><div class="br-val" id="bv-freq">0</div></div>
+      <div class="br-item"><div class="br-lbl">Consistência treino</div><div class="br-track"><div class="br-fill" id="br-tr" style="width:0%"></div></div><div class="br-val" id="bv-tr">0</div></div>
+      <div class="br-item"><div class="br-lbl">Qualidade sono</div><div class="br-track"><div class="br-fill" id="br-so" style="width:0%"></div></div><div class="br-val" id="bv-so">0</div></div>
+      <div class="br-item"><div class="br-lbl">Protocolos de crise</div><div class="br-track"><div class="br-fill" id="br-cr" style="width:0%"></div></div><div class="br-val" id="bv-cr">0</div></div>
+      <div class="br-item"><div class="br-lbl">Semana blindada</div><div class="br-track"><div class="br-fill" id="br-sm" style="width:100%"></div></div><div class="br-val" id="bv-sm">10</div></div>
+    </div>
+
+    <!-- PRO: Análise detalhada -->
+    <div class="pro-analysis" id="pro-analysis">
+      <div class="pa-header">
+        <div class="pa-title">INSIGHTS PERSONALIZADOS</div>
+        <div class="rg-badge">PRO</div>
+      </div>
+      <div class="insight-list" id="insight-list">
+        <!-- gerado por JS -->
+      </div>
+    </div>
+
+    <div style="height:1rem;"></div>
+  </div>
+</div>
+
+
+<!-- ══ SUPORTE ══ -->
+<div class="screen" id="screen-suporte">
+  <div class="app-header">
+    <div class="header-logo">ORDO</div>
+    <div id="hdr-plan-badge-4" class="free-badge" onclick="goTo('upgrade')">FREE</div>
+  </div>
+  <div class="scroll-area">
+    <div class="suporte-hero">
+      <div style="font-size:.56rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:.28rem;">Fale conosco</div>
+      <div class="suporte-title">Suporte &<br>Contato</div>
+      <div class="suporte-sub">Rafael responde pessoalmente. Escolha o melhor canal.</div>
+    </div>
+
+    <div class="contact-cards">
+      <a class="contact-card" id="whatsapp-link" href="#" onclick="openWhatsApp();return false;">
+        <div class="contact-card-icon">💬</div>
+        <div class="contact-card-info">
+          <div class="contact-card-title">WhatsApp</div>
+          <div class="contact-card-desc">Fale direto com Rafael · Resposta em até 24h</div>
+        </div>
+        <div class="contact-card-arrow">›</div>
+      </a>
+      <a class="contact-card" href="https://www.instagram.com/rafaespadim" target="_blank">
+        <div class="contact-card-icon">📸</div>
+        <div class="contact-card-info">
+          <div class="contact-card-title">Instagram</div>
+          <div class="contact-card-desc">@rafaespadim · Conteúdo diário sobre consistência</div>
+        </div>
+        <div class="contact-card-arrow">›</div>
+      </a>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">ENVIAR MENSAGEM</div>
+      <div style="font-size:.75rem;color:var(--muted2);margin-bottom:1rem;line-height:1.5;">
+        Sua mensagem será enviada pelo WhatsApp com as informações preenchidas abaixo.
+      </div>
+      <div class="form-field">
+        <label class="form-label">Seu nome</label>
+        <input type="text" class="form-input" id="contact-nome" placeholder="Como você se chama?">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Assunto</label>
+        <select class="form-input" id="contact-assunto">
+          <option value="">Selecione o assunto</option>
+          <option value="Dúvida sobre o app">Dúvida sobre o app ORDO</option>
+          <option value="Mentoria em grupo">Mentoria em grupo</option>
+          <option value="Mentoria individual">Mentoria individual</option>
+          <option value="Meu plano/assinatura">Meu plano / assinatura</option>
+          <option value="Sugestão de melhoria">Sugestão de melhoria</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Mensagem</label>
+        <textarea class="form-input" id="contact-msg" placeholder="Escreva sua mensagem aqui..."></textarea>
+      </div>
+      <button class="btn-main" onclick="enviarMensagem()">ENVIAR PELO WHATSAPP 💬</button>
+      <div style="font-size:.68rem;color:var(--muted);text-align:center;margin-top:.7rem;line-height:1.5;">
+        Ao clicar, você será redirecionado para o WhatsApp com a mensagem já preenchida.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MENTORIA ══ -->
+<div class="screen" id="screen-mentoria">
+  <div class="app-header">
+    <div class="header-logo">ORDO</div>
+    <div id="hdr-plan-badge-5" class="free-badge" onclick="goTo('upgrade')">FREE</div>
+  </div>
+  <div class="scroll-area">
+    <div class="mentoria-hero">
+      <div style="font-size:.56rem;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:.28rem;">Sua jornada</div>
+      <div class="mentoria-page-title">Minha<br>Mentoria</div>
+      <div class="mentoria-page-sub">Gerencie suas sessões e acompanhe sua evolução.</div>
+      <div class="mentoria-plan-tag" id="mentoria-plan-tag">🔒 BLOQUEADO</div>
+    </div>
+
+    <!-- LOCKED STATE (free/pro) -->
+    <div id="mentoria-locked" class="mentoria-lock">
+      <div style="font-size:2rem;margin-bottom:.6rem;">🔒</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--text);margin-bottom:.4rem;">Área exclusiva de mentorados</div>
+      <div style="font-size:.78rem;color:var(--muted2);line-height:1.5;margin-bottom:1rem;">
+        Esta área é exclusiva para quem está na mentoria em grupo ou individual com Rafael.
+      </div>
+      <button class="btn-main" onclick="goTo('upgrade')">VER PLANOS DE MENTORIA</button>
+    </div>
+
+    <!-- UNLOCKED STATE (grupo / individual) -->
+    <div id="mentoria-unlocked" style="display:none;">
+
+      <!-- CARD DE BOAS-VINDAS PÓS-COMPRA -->
+      <div id="welcome-mentoria-card" style="margin:1.2rem 1.4rem;
+        background:linear-gradient(135deg,rgba(200,169,81,.15),rgba(200,169,81,.04));
+        border:1.5px solid var(--gold);border-radius:var(--r);padding:1.3rem;
+        position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-25px;right:-25px;width:90px;height:90px;border-radius:50%;
+          background:radial-gradient(circle,rgba(200,169,81,.2),transparent 70%);"></div>
+        <div style="font-size:.56rem;letter-spacing:.28em;color:var(--gold);
+          text-transform:uppercase;margin-bottom:.4rem;">🎉 Bem-vindo(a)</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--text);
+          margin-bottom:.5rem;line-height:1.2;">Próximo passo:<br><em style="color:var(--gold)">fale comigo agora.</em></div>
+        <div style="font-size:.8rem;color:var(--muted2);line-height:1.6;margin-bottom:1rem;"
+          id="welcome-msg-text"></div>
+        <button class="btn-main" onclick="enviarBoasVindas()"
+          style="font-size:.95rem;">
+          FALAR COM RAFAEL AGORA 💬
+        </button>
+        <div style="font-size:.65rem;color:var(--muted);text-align:center;margin-top:.5rem;">
+          Abre o WhatsApp com mensagem já preenchida
+        </div>
+      </div>
+
+      <!-- Próxima Call -->
+      <div class="next-call-card">
+        <div class="next-call-eyebrow">📅 Próxima sessão</div>
+        <div class="next-call-date" id="next-call-date">A definir</div>
+        <div class="next-call-type" id="next-call-type">Confirme sua presença abaixo</div>
+      </div>
+
+      <div class="sec-lbl" style="margin-top:1.2rem;">Ações</div>
+      <div class="mentoria-actions">
+
+        <!-- Confirmar presença -->
+        <div class="mentoria-action-card" id="mac-confirmar">
+          <div class="ma-header" onclick="toggleMA('confirmar')">
+            <div class="ma-icon">✅</div>
+            <div>
+              <div class="ma-title">Confirmar presença</div>
+              <div class="ma-desc">Confirme ou cancele sua participação na próxima sessão</div>
+            </div>
+          </div>
+          <div class="ma-body">
+            <div class="ma-body-inner">
+              <div style="display:flex;gap:.6rem;">
+                <button class="btn-main" style="font-size:.85rem;padding:.7rem;"
+                  onclick="confirmarPresenca('sim')">✅ VOU PARTICIPAR</button>
+                <button class="btn-ghost" style="font-size:.85rem;padding:.7rem;margin:0;"
+                  onclick="confirmarPresenca('nao')">❌ NÃO POSSO</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remarcar -->
+        <div class="mentoria-action-card" id="mac-remarcar">
+          <div class="ma-header" onclick="toggleMA('remarcar')">
+            <div class="ma-icon">📅</div>
+            <div>
+              <div class="ma-title">Remarcar sessão</div>
+              <div class="ma-desc">Solicite um novo horário pelo WhatsApp</div>
+            </div>
+          </div>
+          <div class="ma-body">
+            <div class="ma-body-inner">
+              <div style="font-size:.78rem;color:var(--muted2);line-height:1.5;margin-bottom:.7rem;">
+                Envie uma mensagem para o Rafael informando sua disponibilidade.
+              </div>
+              <div class="form-field">
+                <label class="form-label">Sua disponibilidade</label>
+                <textarea class="form-input" id="remarcar-msg" placeholder="Ex: Consigo na quinta às 19h ou sábado de manhã..."
+                  style="min-height:80px;"></textarea>
+              </div>
+              <button class="btn-main" style="font-size:.88rem;padding:.75rem;"
+                onclick="solicitarRemarca()">ENVIAR SOLICITAÇÃO 💬</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notas pré-call -->
+        <div class="mentoria-action-card" id="mac-notas">
+          <div class="ma-header" onclick="toggleMA('notas')">
+            <div class="ma-icon">📝</div>
+            <div>
+              <div class="ma-title">Notas para a próxima call</div>
+              <div class="ma-desc">Envie pontos que quer discutir com Rafael</div>
+            </div>
+          </div>
+          <div class="ma-body">
+            <div class="ma-body-inner">
+              <div style="font-size:.78rem;color:var(--muted2);line-height:1.5;margin-bottom:.7rem;">
+                Rafael lê antes da call para aproveitar melhor o tempo juntos.
+              </div>
+              <div class="form-field">
+                <label class="form-label">O que você quer trabalhar?</label>
+                <textarea class="form-input" id="notas-msg"
+                  placeholder="Ex: Travei no treino essa semana, quero entender o padrão. Também quero ajustar minha semana blindada..."
+                  style="min-height:100px;"></textarea>
+              </div>
+              <button class="btn-main" style="font-size:.88rem;padding:.75rem;"
+                onclick="enviarNotas()">ENVIAR NOTAS 💬</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acessar grupo -->
+        <div class="mentoria-action-card" id="mac-grupo">
+          <div class="ma-header" onclick="abrirGrupo()">
+            <div class="ma-icon">👥</div>
+            <div>
+              <div class="ma-title">Acessar comunidade</div>
+              <div class="ma-desc">Grupo A Ordem 3R no WhatsApp</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Histórico de calls -->
+      <div class="sec-lbl" style="margin-top:1.4rem;">Histórico</div>
+      <div style="margin:0 1.4rem 1.4rem;background:var(--card);border:1px solid var(--gold-border);
+        border-radius:var(--r);padding:1rem 1.2rem;">
+        <div id="call-history">
+          <div style="text-align:center;padding:1rem;font-size:.8rem;color:var(--muted2);">
+            Nenhuma sessão registrada ainda.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /mentoria-unlocked -->
+  </div>
+</div>
+
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none;">
+  <button class="nav-btn active" onclick="goTo('home')"><span class="nav-icon">⬛</span><span class="nav-lbl">Início</span></button>
+  <button class="nav-btn" onclick="goTo('semana')"><span class="nav-icon">📅</span><span class="nav-lbl">Semana</span></button>
+  <button class="nav-btn" onclick="goTo('crise')"><span class="nav-icon">🚨</span><span class="nav-lbl">Crise</span></button>
+  <button class="nav-btn" onclick="goTo('score')"><span class="nav-icon">📊</span><span class="nav-lbl">Score</span></button>
+  <button class="nav-btn" onclick="goTo('mentoria')"><span class="nav-icon">🎯</span><span class="nav-lbl">Mentoria</span></button>
+  <button class="nav-btn" onclick="goTo('suporte')"><span class="nav-icon">💬</span><span class="nav-lbl">Suporte</span></button>
+</nav>
+
+</div><!-- #app -->
+
+
+<!-- ══ TOUR GUIADO ══ -->
+<div id="tour-overlay">
+  <div class="tour-sheet" id="tour-sheet">
+    <div class="tour-step-dots" id="tour-dots"></div>
+    <div class="tour-icon" id="tour-icon"></div>
+    <div class="tour-title" id="tour-title"></div>
+    <div class="tour-desc" id="tour-desc"></div>
+    <div class="tour-highlight" id="tour-highlight"></div>
+    <div class="tour-nav">
+      <button class="tour-skip" onclick="closeTour()">PULAR</button>
+      <button class="tour-next" id="tour-next-btn" onclick="tourNext()">PRÓXIMO →</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══ STATE ══
+const S={
+  obStep:0,
+  c1:null,c2:null,c3:null,
+  plan:'free', // 'free' | 'pro' | 'grupo' | 'individual'
+  proUnlocked:false,
+  treino:{status:null,dur:45,nota:''},
+  sono:{qual:null,hora:'22:30',horas:7,nota:''},
+  hab:{clareza:false,hidra:false,plano:false},
+  score:0,dias:0,crises:0,trialDays:7,
+  activeScreen:'onboarding',
+  crisisOpt:null,
+  blocks:[]
+};
+
+// ROTINAS POR PERFIL
+const ROTINAS={
+  sobrecarga:[
+    {h:6,m:0,dur:15,name:'Clareza Mental',color:'bc-plano'},
+    {h:6,m:20,dur:50,name:'Treino',color:'bc-treino'},
+    {h:7,m:20,dur:10,name:'Check-in Manhã',color:'bc-plano'},
+    {h:12,m:0,dur:90,name:'Bloco Inegociável',color:'bc-ineg'},
+    {h:15,m:0,dur:20,name:'Micro-revisão',color:'bc-review'},
+    {h:20,m:30,dur:15,name:'Check-in 3R',color:'bc-plano'},
+    {h:22,m:0,dur:30,name:'Protocolo de Sono',color:'bc-sono'},
+  ],
+  perfeccionismo:[
+    {h:6,m:30,dur:20,name:'Permissão do Dia',color:'bc-plano'},
+    {h:7,m:0,dur:40,name:'Treino Mínimo Viável',color:'bc-treino'},
+    {h:8,m:0,dur:10,name:'Prioridade única',color:'bc-review'},
+    {h:12,m:0,dur:60,name:'Bloco Inegociável',color:'bc-ineg'},
+    {h:21,m:0,dur:15,name:'Revisão sem julgamento',color:'bc-plano'},
+    {h:22,m:30,dur:30,name:'Protocolo de Sono',color:'bc-sono'},
+  ],
+  dispersao:[
+    {h:6,m:0,dur:10,name:'Definir 1 Prioridade',color:'bc-plano'},
+    {h:6,m:15,dur:60,name:'Treino',color:'bc-treino'},
+    {h:8,m:0,dur:90,name:'Bloco Inegociável',color:'bc-ineg'},
+    {h:12,m:30,dur:15,name:'Hidratação + Pausa',color:'bc-hidra'},
+    {h:14,m:0,dur:90,name:'Bloco Inegociável 2',color:'bc-ineg'},
+    {h:21,m:0,dur:15,name:'Check-in 3R',color:'bc-plano'},
+    {h:22,m:0,dur:30,name:'Protocolo de Sono',color:'bc-sono'},
+  ],
+  motivacao:[
+    {h:6,m:0,dur:5,name:'Gatilho de Ativação',color:'bc-plano'},
+    {h:6,m:10,dur:55,name:'Treino (sem negociar)',color:'bc-treino'},
+    {h:7,m:15,dur:10,name:'Checklist do Dia',color:'bc-review'},
+    {h:12,m:0,dur:90,name:'Bloco Inegociável',color:'bc-ineg'},
+    {h:20,m:0,dur:30,name:'Treino Contingência',color:'bc-treino'},
+    {h:21,m:30,dur:15,name:'Check-in + Amanhã',color:'bc-plano'},
+    {h:22,m:0,dur:30,name:'Protocolo de Sono',color:'bc-sono'},
+  ]
+};
+
+const PERFIS={
+  sobrecarga:{type:'Padrão de Sobrecarga',name:'O Guerreiro Sobrecarregado',desc:'Alta capacidade de execução, mas colapsa quando o volume passa do limite. Seu protocolo foca em válvulas de escape e mínimos viáveis para semanas pesadas.'},
+  perfeccionismo:{type:'Padrão de Perfeccionismo',name:'O Bloqueado pelo Ideal',desc:'Não falta por preguiça — o "ou tudo ou nada" te paralisa. Seu protocolo dá permissão estruturada para fazer menos sem culpa. Parcial é vitória.'},
+  dispersao:{type:'Padrão de Dispersão',name:'O Arquiteto Sem Foco',desc:'Energia e ideias, mas distribuídas demais. Seu protocolo força hierarquia clara: 1 prioridade por bloco, foco profundo sem multitarefa.'},
+  motivacao:{type:'Padrão de Dependência de Ânimo',name:'O Executor Instável',desc:'Quando está animado, performa no topo. Seu protocolo cria gatilhos automáticos que dispensam a motivação — ação sem precisar de ânimo.'}
+};
+
+const INSIGHTS={
+  sobrecarga:['Seu padrão de sobrecarga pede <strong>blocos de recuperação planejados</strong>. Sem eles, você colapsa em semanas 3-4.','Quando sua taxa de treino cai, é sinal de que a semana está acima da capacidade. Ative o modo contingência antes de zerar.','Score abaixo de 40 por 2 dias seguidos → revise a carga da semana blindada.'],
+  perfeccionismo:['Registrar treino parcial <strong>conta para o score</strong>. Perfeição não é critério. Presença é.','Sua análise mostra que dias onde você registrou "parcial" ainda têm score alto. Continue.','Recomendação: reduza o tamanho dos blocos em 30% para criar margem de sobra.'],
+  dispersao:['Seu padrão mostra <strong>mais check-ins nas segundas e terças</strong> — depois dispersa. Blindar quinta e sexta é prioridade.','1 Bloco Inegociável por dia gera mais resultado do que 3 blocos médios.','Quando o score de planejamento cai, seu treino cai junto. Eles são interdependentes.'],
+  motivacao:['Você precisa de <strong>gatilhos de ambiente</strong>, não motivação. Roupa de treino na cadeira = 80% de chance de executar.','Dias com check-in matutino têm 3x mais chance de treino realizado. Faça o check-in em 2 min assim que acordar.','Score mostra que crises superadas aumentam sua consistência nas 48h seguintes. Use isso.']
+};
+
+// ══ LOAD / SAVE ══
+function loadState(){
+  try{
+    const s=localStorage.getItem('ordo_v4');
+    if(s){
+      const saved=JSON.parse(s);
+      // Preserva apenas dados de hábitos/score, sempre volta para welcome no início
+      Object.assign(S,saved);
+    }
+  }catch(e){}
+}
+function saveState(){try{localStorage.setItem('ordo_v4',JSON.stringify(S));}catch(e){}}
+
+// ══ INIT ══
+window.addEventListener('load',()=>{
+  try{['ordo_v3','ordo_v2','3r_state','ordo_v4'].forEach(k=>localStorage.removeItem(k));}catch(e){}
+  // Check URL params for automatic PRO unlock (from Kiwify "obrigado" page)
+  const urlParams = new URLSearchParams(window.location.search);
+  const proParam = urlParams.get('pro');
+  const planParam = urlParams.get('plano');
+  if(proParam === 'ativado' || proParam === 'SIM') {
+    S.plan = planParam || 'pro';
+    S.proUnlocked = true;
+    // Clean URL without reloading
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  // Reset total de estado para garantir início pela welcome
+  Object.assign(S,{obStep:0,c1:null,c2:null,c3:null,plan:'pro',treino:{status:null,dur:45,nota:''},sono:{qual:null,hora:'22:30',horas:7,nota:''},hab:{clareza:false,hidra:false,plano:false},score:0,dias:0,crises:0,trialDays:7,activeScreen:'onboarding',crisisOpt:null,blocks:[]});
+  loadState();
+  // Remove active de todas as telas antes de iniciar
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
+  setTimeout(()=>{
+    document.getElementById('splash').classList.add('out');
+    document.getElementById('app').classList.add('in');
+    const d=new Date();
+    const opts={weekday:'long',day:'numeric',month:'short'};
+    const el=document.getElementById('home-date');
+    if(el)el.textContent=d.toLocaleDateString('pt-BR',opts);
+    if(S.activeScreen==='onboarding'||!S.activeScreen||true){
+      // Sempre começa na welcome para demonstração limpa
+      // Retire o "||true" em produção para retomar onde parou
+      if(S.obStep===0||S.activeScreen==='onboarding'){
+        document.getElementById('screen-welcome').classList.add('active');
+      } else {
+        document.getElementById('screen-onboarding').classList.add('active');
+        document.getElementById('ob'+S.obStep).classList.add('active');
+      }
+    } else {
+      document.getElementById('bottom-nav').style.display='flex';
+      const sc=document.getElementById('screen-'+S.activeScreen);
+      if(sc)sc.classList.add('active');
+      const SCRS=['home','semana','upgrade','crise','score'];
+      document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',SCRS[i]===S.activeScreen));
+      restoreHabits();
+      buildWeekDays();
+      buildTimeline();
+      buildRotinaCard();
+    }
+    renderScore();
+    updatePlanUI();
+    updateUpgradeScreen();
+    updateMentoriaScreen();
+  },2000);
+});
+
+// ══ ONBOARDING ══
+function obNext(n){
+  document.getElementById('ob'+S.obStep).classList.remove('active');
+  S.obStep=n;
+  document.getElementById('ob'+n).classList.add('active');
+  if(n===4)buildProfile();
+}
+function pick(el,key,val,gid,btnId){
+  document.getElementById(gid).querySelectorAll('.choice').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');S[key]=val;
+  document.getElementById(btnId).disabled=false;
+}
+function buildProfile(){
+  const p=PERFIS[S.c1]||PERFIS.sobrecarga;
+  document.getElementById('profile-card').innerHTML=`
+    <div class="p-type">${p.type}</div>
+    <div class="p-name">${p.name}</div>
+    <div class="p-desc">${p.desc}</div>`;
+}
+function enterApp(){
+  S.activeScreen='home';
+  // gera blocos de rotina com base no perfil
+  const r=ROTINAS[S.c1]||ROTINAS.sobrecarga;
+  S.blocks=r.map((b,i)=>({...b,id:'blk'+i}));
+  saveState();
+  document.getElementById('screen-onboarding').classList.remove('active');
+  document.getElementById('screen-home').classList.add('active');
+  document.getElementById('bottom-nav').style.display='flex';
+  renderScore();buildWeekDays();buildTimeline();buildRotinaCard();buildInsights();updatePlanUI();updateMentoriaScreen();setTimeout(openTour,400);
+}
+
+// ══ NAVIGATION ══
+const SCREENS=['home','semana','crise','score','mentoria','suporte'];
+function goTo(name){
+  SCREENS.forEach(s=>document.getElementById('screen-'+s)?.classList.remove('active'));
+  document.getElementById('screen-'+name)?.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',SCREENS[i]===name));
+  S.activeScreen=name;saveState();
+  if(name==='score')setTimeout(animScore,120);
+  if(name==='semana'){buildTimeline();buildRotinaCard();}
+  if(name==='upgrade'){updateUpgradeScreen();}
+  if(name==='mentoria'){updateMentoriaScreen();}
+}
+
+// ══ PLAN ══
+// Links de checkout da Kiwify — substitua pelas URLs reais dos seus produtos
+const KIWIFY_LINKS = {
+  pro:        'https://pay.kiwify.com.br/SEU-LINK-PRO',
+  grupo:      'https://pay.kiwify.com.br/SEU-LINK-GRUPO',
+  individual: 'https://pay.kiwify.com.br/SEU-LINK-INDIVIDUAL',
+};
+
+function setPlan(plan){
+  if(plan==='free'){
+    S.plan='free';S.proUnlocked=false;saveState();
+    updatePlanUI();updateUpgradeScreen();
+    showToast('Continuando no plano grátis.');
+    return;
+  }
+  // Redireciona para checkout da Kiwify
+  const link = KIWIFY_LINKS[plan];
+  if(link && !link.includes('SEU-LINK')){
+    window.open(link, '_blank');
+    showToast('Abrindo checkout da Kiwify...');
+  } else {
+    // Modo demo: ativa direto (remover em produção)
+    S.plan=plan;S.proUnlocked=true;saveState();
+    updatePlanUI();updateUpgradeScreen();updateMentoriaScreen();
+    showToast('🔓 '+plan.toUpperCase()+' ativado! (modo demo)');
+    setTimeout(()=>goTo('home'),800);
+  }
+}
+function isPro(){return S.plan==='pro'||S.plan==='grupo'||S.plan==='individual';}
+
+function updatePlanUI(){
+  const pro=isPro();
+  // header badges
+  ['hdr-plan-badge','hdr-plan-badge-2','hdr-plan-badge-3'].forEach(id=>{
+    const e=document.getElementById(id);if(!e)return;
+    if(pro){e.className='pro-badge';e.textContent='PRO';e.onclick=null;}
+    else{e.className='free-badge';e.textContent='FREE';e.onclick=()=>goTo('upgrade');}
+  });
+  // upgrade strip
+  const us=document.getElementById('upgrade-strip');
+  if(us)us.style.display=pro?'none':'flex';
+  // notas treino
+  const nb=document.getElementById('note-badge');
+  if(nb)nb.style.display=pro?'none':'inline';
+  const tnw=document.getElementById('treino-nota');
+  if(tnw){tnw.disabled=!pro;tnw.style.opacity=pro?1:.4;tnw.placeholder=pro?'Ex: foco no agachamento, bateu PR...':'Upgrade para PRO para adicionar notas';}
+  // rotina card badge
+  const rgb=document.querySelector('.rg-badge');
+  if(rgb)rgb.style.display=pro?'none':'inline';
+  // pro analysis
+  buildInsights();
+}
+
+// ══ HABITS ══
+function toggleExp(id){
+  ['treino','sono','hab'].forEach(h=>{
+    const r=document.getElementById('hr-'+h);
+    if(h!==id)r.classList.remove('open');
+  });
+  document.getElementById('hr-'+id).classList.toggle('open');
+}
+
+// TREINO
+let trSel=null;
+function setTreino(v){
+  trSel=v;
+  ['ok','par','bad'].forEach(x=>document.getElementById('to-'+x).className='t-opt');
+  document.getElementById('to-'+v).className='t-opt sel-'+v;
+  document.getElementById('dur-row').style.display=v==='bad'?'none':'flex';
+}
+function saveTreino(){
+  if(!trSel){showToast('Selecione como foi o treino');return;}
+  S.treino.status=trSel;
+  S.treino.dur=parseInt(document.getElementById('dur-sl').value);
+  S.treino.nota=document.getElementById('treino-nota')?.value||'';
+  const lbl={ok:'COMPLETO',par:'PARCIAL',bad:'NÃO FIZ'};
+  const cls={ok:'s-ok',par:'s-par',bad:'s-bad'};
+  const st=document.getElementById('st-treino');
+  st.textContent=lbl[trSel];st.className='h-status '+cls[trSel];
+  document.getElementById('hr-treino').classList.toggle('done',trSel!=='bad');
+  document.getElementById('hr-treino').classList.remove('open');
+  S.score=calcScore();renderScore();saveState();
+  showToast(trSel==='ok'?'Treino completo! 🔥':trSel==='par'?'Parcial conta! ⚡':'Registrado. Amanhã você vai.');
+}
+
+// SONO
+let sonoQ=null;
+function setSQ(v){
+  sonoQ=v;
+  ['otimo','ok','ruim'].forEach(x=>document.getElementById('sq-'+x).classList.toggle('sel',x===v));
+}
+function saveSono(){
+  if(!sonoQ){showToast('Selecione a qualidade do sono');return;}
+  S.sono.qual=sonoQ;
+  S.sono.hora=document.getElementById('sono-hora').value;
+  S.sono.horas=parseInt(document.getElementById('sono-h').value)||7;
+  S.sono.nota=document.getElementById('sono-nota').value;
+  const lbl={otimo:'ÓTIMO 😴',ok:'OK 😐',ruim:'RUIM 😫'};
+  const cls={otimo:'s-ok',ok:'s-par',ruim:'s-bad'};
+  const st=document.getElementById('st-sono');
+  st.textContent=lbl[sonoQ];st.className='h-status '+cls[sonoQ];
+  document.getElementById('hr-sono').classList.toggle('done',sonoQ!=='ruim');
+  document.getElementById('hr-sono').classList.remove('open');
+  S.score=calcScore();renderScore();saveState();
+  showToast('Sono registrado! '+S.sono.horas+'h');
+}
+
+// HÁBITOS
+function togHab(row,key){
+  const t=document.getElementById('tog-'+key);
+  const on=!t.classList.contains('on');
+  t.classList.toggle('on',on);
+  S.hab[key]=on;
+  const done=Object.values(S.hab).filter(Boolean).length;
+  const st=document.getElementById('st-hab');
+  st.textContent=done+'/3';
+  st.className='h-status '+(done===3?'s-ok':done>0?'s-par':'s-none');
+  document.getElementById('hr-hab').classList.toggle('done',done>0);
+  S.score=calcScore();renderScore();saveState();
+}
+function restoreHabits(){
+  if(S.treino.status){
+    const lbl={ok:'COMPLETO',par:'PARCIAL',bad:'NÃO FIZ'};
+    const cls={ok:'s-ok',par:'s-par',bad:'s-bad'};
+    const st=document.getElementById('st-treino');
+    if(st){st.textContent=lbl[S.treino.status];st.className='h-status '+cls[S.treino.status];}
+    document.getElementById('hr-treino')?.classList.toggle('done',S.treino.status!=='bad');
+    trSel=S.treino.status;
+  }
+  if(S.sono.qual){
+    const lbl={otimo:'ÓTIMO 😴',ok:'OK 😐',ruim:'RUIM 😫'};
+    const cls={otimo:'s-ok',ok:'s-par',ruim:'s-bad'};
+    const st=document.getElementById('st-sono');
+    if(st){st.textContent=lbl[S.sono.qual];st.className='h-status '+cls[S.sono.qual];}
+    document.getElementById('hr-sono')?.classList.toggle('done',S.sono.qual!=='ruim');
+  }
+  const done=Object.values(S.hab).filter(Boolean).length;
+  ['clareza','hidra','plano'].forEach(k=>{if(S.hab[k])document.getElementById('tog-'+k)?.classList.add('on');});
+  if(done>0){
+    const st=document.getElementById('st-hab');
+    if(st){st.textContent=done+'/3';st.className='h-status '+(done===3?'s-ok':done>0?'s-par':'s-none');}
+    document.getElementById('hr-hab')?.classList.toggle('done',done>0);
+  }
+}
+
+// ══ ROTINA CARD ══
+function buildRotinaCard(){
+  const profile=S.c1||'sobrecarga';
+  const rotina=ROTINAS[profile];
+  const pName=PERFIS[profile]?.name||'';
+  const t=document.getElementById('rg-title-txt');
+  if(t)t.textContent='ROTINA — '+pName.toUpperCase().split(' ')[0];
+  const cont=document.getElementById('rg-items');
+  if(!cont)return;
+  cont.innerHTML=rotina.map(b=>`
+    <div class="rg-item">
+      <div class="rg-time">${fmt(b.h,b.m)}</div>
+      <div><div class="rg-name">${b.name}</div><div class="rg-dur">${b.dur} min</div></div>
+    </div>`).join('');
+}
+
+// ══ INSIGHTS ══
+function buildInsights(){
+  const il=document.getElementById('insight-list');const pa=document.getElementById('pro-analysis');
+  if(!il||!pa)return;
+  if(!isPro()){
+    pa.innerHTML=`<div style="padding:1.1rem;text-align:center;">
+      <div style="font-size:1.5rem;margin-bottom:.4rem;">🔒</div>
+      <div style="font-size:.82rem;color:var(--muted2);margin-bottom:.8rem;line-height:1.4;">Insights personalizados por perfil são exclusivos do ORDO Pro.</div>
+      <button class="plan-btn" style="width:auto;padding:.6rem 1.2rem;" onclick="goTo('upgrade')">VER PLANOS</button>
+    </div>`;
+    return;
+  }
+  const ins=INSIGHTS[S.c1]||INSIGHTS.sobrecarga;
+  il.innerHTML=ins.map((t,i)=>`
+    <div class="insight-item">
+      <div class="insight-icon">${['💡','📈','⚡'][i]}</div>
+      <div class="insight-text">${t}</div>
+    </div>`).join('');
+}
+
+// ══ SCORE ══
+function calcScore(){
+  let s=10;
+  if(S.treino.status==='ok')s+=35;
+  else if(S.treino.status==='par')s+=20;
+  if(S.sono.qual==='otimo')s+=15;
+  else if(S.sono.qual==='ok')s+=8;
+  const out=Object.values(S.hab).filter(Boolean).length;
+  s+=out*8;s+=Math.min(S.crises*5,10);s+=Math.min(S.dias*2,10);
+  return Math.min(s,100);
+}
+function renderScore(){
+  const sc=S.score;
+  const off=188-(188*sc/100);
+  const r=document.getElementById('mini-ring');
+  if(r)setTimeout(()=>{r.style.strokeDashoffset=off;},100);
+  setT('mini-score',sc);setT('hdr-score',sc);
+  const msgs=['Complete hábitos para subir.','Bom começo. Continue.','Construindo consistência.','Na zona. Não pare.','Score de operação real.'];
+  const trends=['↑ construindo...','↑ subindo','↑ bom ritmo','↑ zona forte','🔥 operando'];
+  const i=Math.min(Math.floor(sc/25),4);
+  setT('score-msg',msgs[i]);setT('score-trend',trends[i]);
+}
+function animScore(){
+  const sc=S.score;
+  setT('big-score',sc);
+  const r=document.getElementById('big-ring');
+  if(r)r.style.strokeDashoffset=346-(346*sc/100);
+  const trRate=S.treino.status&&S.treino.status!=='bad'?100:0;
+  setT('m-dias',S.dias+(S.treino.status?1:0));
+  setT('m-treino',trRate+'%');
+  setT('m-sono',S.sono.horas?(S.sono.horas+'h'):'—');
+  setT('m-crise',S.crises);
+  const trVal=S.treino.status==='ok'?35:S.treino.status==='par'?20:0;
+  const soVal=S.sono.qual==='otimo'?15:S.sono.qual==='ok'?8:0;
+  const crVal=Math.min(S.crises*5,10);
+  setBar('br-freq',Math.min(S.dias*2+10,20),20);setT('bv-freq',Math.min(S.dias*2+10,20));
+  setBar('br-tr',trVal,35);setT('bv-tr',trVal);
+  setBar('br-so',soVal,15);setT('bv-so',soVal);
+  setBar('br-cr',crVal,10);setT('bv-cr',crVal);
+  const vs=['Complete hábitos para construir seu score','Iniciando — cada dia conta','Consistência emergindo','Operando com estrutura real','Score de elite — continue'];
+  const vi=Math.min(Math.floor(sc/25),4);
+  const ve=document.getElementById('score-verdict');
+  if(ve)ve.innerHTML=vs[vi].replace(/(construir|cada|emergindo|real|elite)/,'<em>$1</em>');
+  buildInsights();
+}
+function setT(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function setBar(id,v,max){const e=document.getElementById(id);if(e)setTimeout(()=>{e.style.width=Math.round(v/max*100)+'%';},200);}
+
+// ══ WEEK DAYS ══
+function buildWeekDays(){
+  const g=document.getElementById('week-days');if(!g)return;
+  const days=['D','S','T','Q','Q','S','S'],today=new Date().getDay();
+  g.innerHTML=days.map((d,i)=>`
+    <div class="day-pill ${i===today?'active':i<today?'done':''}" onclick="selDay(${i})">
+      <div class="d-name">${d}</div><div class="d-num">${i+1}</div>
+    </div>`).join('');
+}
+function selDay(i){document.querySelectorAll('.day-pill').forEach((p,j)=>p.classList.toggle('active',j===i));}
+
+// ══ TIMELINE ══
+const SH=5,EH=24,TH=EH-SH;
+function fmt(h,m){return(h<10?'0'+h:h)+':'+(m<10?'0'+m:m);}
+function buildTimeline(){
+  const track=document.getElementById('tl-track');
+  const ruler=document.getElementById('tl-ruler');
+  if(!track||!ruler)return;
+  const H=track.offsetHeight||560;
+  const pph=H/TH;
+  ruler.innerHTML='';
+  for(let h=SH;h<=EH;h++){
+    const y=((h-SH)/TH)*H;
+    const ln=document.createElement('div');ln.className='ruler-line';ln.style.top=y+'px';
+    const lb=document.createElement('div');lb.className='ruler-lbl';lb.style.top=(y-7)+'px';
+    lb.textContent=(h<10?'0'+h:h)+':00';
+    ruler.appendChild(ln);ruler.appendChild(lb);
+  }
+  track.querySelectorAll('.tblock').forEach(b=>b.remove());
+  const blocks=S.blocks.length>0?S.blocks:(ROTINAS[S.c1]||ROTINAS.sobrecarga).map((b,i)=>({...b,id:'blk'+i}));
+  blocks.forEach((blk,idx)=>{
+    const top=((blk.h+blk.m/60-SH)/TH)*H;
+    const height=Math.max((blk.dur/60/TH)*H,26);
+    const el=document.createElement('div');
+    el.className='tblock '+blk.color;
+    el.style.cssText=`top:${top}px;height:${height}px;`;
+    el.innerHTML=`<div class="tb-name">${blk.name}</div>
+      <div class="tb-time" id="tbt-${blk.id}">${fmt(blk.h,blk.m)}</div>
+      <div class="tb-dur">${blk.dur} min</div>`;
+    makeDrag(el,idx,blocks,track,H);
+    track.appendChild(el);
+  });
+}
+function makeDrag(el,idx,blocks,track,H){
+  let sy,st,drag=false;
+  const start=e=>{drag=true;const cy=e.touches?e.touches[0].clientY:e.clientY;sy=cy;st=parseInt(el.style.top)||0;el.classList.add('dragging');e.preventDefault();};
+  const move=e=>{
+    if(!drag)return;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    let nt=Math.max(0,Math.min(H-el.offsetHeight,st+(cy-sy)));
+    el.style.top=nt+'px';
+    const fh=nt/H*TH;
+    const tm=Math.round((SH+fh)*4)*15;
+    const h=Math.floor(tm/60),m=tm%60;
+    const lb=document.getElementById('tbt-'+blocks[idx].id);
+    if(lb)lb.textContent=fmt(h,m);
+  };
+  const end=e=>{
+    if(!drag)return;drag=false;el.classList.remove('dragging');
+    const top=parseInt(el.style.top)||0;
+    const fh=top/H*TH;
+    const tm=Math.round((SH+fh)*4)*15;
+    blocks[idx].h=Math.floor(tm/60);blocks[idx].m=tm%60;
+    S.blocks=blocks;saveState();
+    showToast(blocks[idx].name+' → '+fmt(blocks[idx].h,blocks[idx].m));
+  };
+  el.addEventListener('mousedown',start);el.addEventListener('touchstart',start,{passive:false});
+  document.addEventListener('mousemove',move);document.addEventListener('touchmove',move,{passive:false});
+  document.addEventListener('mouseup',end);document.addEventListener('touchend',end);
+}
+
+// ══ CRISE ══
+function actFS(n){document.querySelectorAll('.fstep').forEach((s,i)=>s.classList.toggle('act',i===n));}
+function setCO(v){S.crisisOpt=v;['sim','nao'].forEach(x=>document.getElementById('co-'+x).classList.toggle('sel',x===v));}
+function genDiag(){
+  const q3=document.getElementById('cq3').value;
+  const has=S.crisisOpt==='sim';
+  const title=has?'Execute o Mínimo Viável Agora':'Dia de Contingência — Salve a Sequência';
+  const steps=has?[
+    'Feche tudo que não é o mínimo.',
+    q3?`Faça: "${q3}"`:'Execute a ação mínima que você definiu.',
+    'Registre como feito. Sequência salva.',
+    'Amanhã: revise o que travou na semana blindada.'
+  ]:[
+    'Você não tem tempo agora. Ok. Não quebre a sequência por zero.',
+    'Faça 1 coisa simbólica: 5 min, 1 série, 1 prioridade.',
+    'Registre mesmo que parcial. Parcial ≠ zero.',
+    'Amanhã volta ao plano. Sem culpa, sem recomeço do zero.'
+  ];
+  const box=document.getElementById('diag-box');
+  setT('diag-t',title);
+  document.getElementById('diag-st').innerHTML=steps.map((s,i)=>`<div class="ds"><div class="ds-n">0${i+1}</div><div>${s}</div></div>`).join('');
+  box.classList.add('show');
+  box.scrollIntoView({behavior:'smooth'});
+}
+
+
+// ══ WELCOME + TOUR ══
+function startOnboarding(){
+  document.getElementById('screen-welcome').classList.remove('active');
+  document.getElementById('screen-onboarding').classList.add('active');
+  document.getElementById('ob0').classList.add('active');
+}
+
+const TOUR_STEPS=[
+  {
+    icon:'⬛',
+    title:'Início',
+    desc:'Sua central diária. Aqui você registra treino, sono e hábitos — e acompanha seu Score de Consistência em tempo real.',
+    highlights:[
+      {icon:'🏋️', text:'<strong>Treino:</strong> marque completo, parcial ou não fiz — com duração.'},
+      {icon:'😴', text:'<strong>Sono:</strong> registre qualidade, horário e horas dormidas.'},
+      {icon:'📋', text:'<strong>Hábitos:</strong> clareza mental, hidratação e planejamento.'},
+    ]
+  },
+  {
+    icon:'📅',
+    title:'Semana <em>Blindada</em>',
+    desc:'Sua rotina foi gerada com base no seu perfil. Arraste cada bloco na linha do tempo para encaixar nos seus horários reais.',
+    highlights:[
+      {icon:'☀️', text:'<strong>Blocos Inegociáveis:</strong> treino e clareza — ninguém negocia.'},
+      {icon:'⚡', text:'<strong>Contingência:</strong> semana apertou? 20% feito > zero feito.'},
+      {icon:'🔒', text:'<strong>Templates por perfil:</strong> disponíveis no plano Pro.'},
+    ]
+  },
+  {
+    icon:'🚨',
+    title:'Protocolo de <em>Crise</em>',
+    desc:'Quando a semana travar, não entre em colapso. 3 perguntas simples geram um diagnóstico e uma ação concreta para não quebrar a sequência.',
+    highlights:[
+      {icon:'01', text:'<strong>O que travou?</strong> — seja específico.'},
+      {icon:'02', text:'<strong>Tem 15 min?</strong> — para o mínimo viável.'},
+      {icon:'03', text:'<strong>Menor ação possível</strong> — nomeou, execute.'},
+    ]
+  },
+  {
+    icon:'📊',
+    title:'Score de <em>Consistência</em>',
+    desc:'Não mede perfeição. Mede operação real. O score sobe com frequência de registros, qualidade do treino, sono e crises superadas.',
+    highlights:[
+      {icon:'🎯', text:'<strong>0–40:</strong> construindo a base.'},
+      {icon:'⚡', text:'<strong>40–70:</strong> consistência emergindo.'},
+      {icon:'🔥', text:'<strong>70–100:</strong> você opera. Hora de acelerar com a mentoria.'},
+    ]
+  },
+  {
+    icon:'⭐',
+    title:'Planos <em>ORDO</em>',
+    desc:'O app é sua ferramenta. A mentoria é sua aceleração. No plano Pro você desbloqueia rotina automática, insights e análise detalhada.',
+    highlights:[
+      {icon:'🆓', text:'<strong>Free:</strong> diagnóstico, registro, protocolo de crise e comunidade A Ordem 3R.'},
+      {icon:'💛', text:'<strong>Pro R$29/mês:</strong> rotina gerada, insights e análise completa.'},
+      {icon:'🚀', text:'<strong>Mentoria:</strong> Rafael junto com você por 8 semanas.'},
+    ]
+  },
+];
+
+let tourStep=0;
+function openTour(){
+  tourStep=0;
+  document.getElementById('tour-overlay').classList.add('open');
+  renderTourStep();
+}
+function closeTour(){
+  document.getElementById('tour-overlay').classList.remove('open');
+}
+function tourNext(){
+  if(tourStep<TOUR_STEPS.length-1){tourStep++;renderTourStep();}
+  else{closeTour();showToast('Tour concluído! Agora é com você. 🔥');}
+}
+function renderTourStep(){
+  const step=TOUR_STEPS[tourStep];
+  const last=tourStep===TOUR_STEPS.length-1;
+  // dots
+  document.getElementById('tour-dots').innerHTML=TOUR_STEPS.map((_,i)=>
+    `<div class="tour-dot${i===tourStep?' active':''}"></div>`).join('');
+  document.getElementById('tour-icon').textContent=step.icon;
+  document.getElementById('tour-title').innerHTML=step.title;
+  document.getElementById('tour-desc').textContent=step.desc;
+  document.getElementById('tour-highlight').innerHTML=step.highlights.map(h=>
+    `<div class="tour-hl-item"><div class="tour-hl-icon">${h.icon}</div><div>${h.text}</div></div>`).join('');
+  document.getElementById('tour-next-btn').textContent=last?'ENTRAR NO ORDO ✓':'PRÓXIMO →';
+}
+
+
+// ══ UNLOCK / CÓDIGO DE ACESSO ══
+// Códigos válidos por plano (em produção viriam do backend/Kiwify webhook)
+// Formato: ORDO-PRO-XXXX, ORDO-GRUPO-XXXX, ORDO-IND-XXXX
+const CODE_PREFIXES = {
+  'ORDO-PRO-': 'pro',
+  'ORDO-GRUPO-': 'grupo',
+  'ORDO-IND-': 'individual',
+  // Código de demo para testes
+  'DEMO-PRO': 'pro',
+  'DEMO-GRUPO': 'grupo',
+  'DEMO-IND': 'individual',
+};
+
+function activateCode(){
+  const input = document.getElementById('unlock-code-input');
+  const msg = document.getElementById('code-msg');
+  const code = input.value.trim().toUpperCase();
+
+  if(!code){
+    msg.style.color = '#E74C3C';
+    msg.textContent = 'Digite o código recebido por e-mail.';
+    return;
+  }
+
+  let planFound = null;
+  for(const [prefix, plan] of Object.entries(CODE_PREFIXES)){
+    if(code.startsWith(prefix) || code === prefix.replace('-','') ){
+      planFound = plan;
+      break;
+    }
+  }
+
+  if(planFound){
+    S.plan = planFound;
+    S.proUnlocked = true;
+    saveState();
+    updatePlanUI();
+    updateUpgradeScreen();
+    input.value = '';
+    msg.style.color = 'var(--gold)';
+    msg.textContent = '✓ Plano ativado com sucesso!';
+    showToast('🔓 ' + planFound.toUpperCase() + ' ativado! Bem-vindo.');
+    setTimeout(()=>goTo('home'), 1500);
+  } else {
+    input.style.borderColor = '#E74C3C';
+    msg.style.color = '#E74C3C';
+    msg.textContent = 'Código inválido. Verifique o e-mail da Kiwify.';
+  }
+}
+
+function updateUpgradeScreen(){
+  const pro = isPro();
+  const banner = document.getElementById('pro-active-banner');
+  const codeBox = document.getElementById('code-unlock-box');
+  const lbl = document.getElementById('active-plan-label');
+  if(!banner || !codeBox) return;
+
+  if(pro){
+    banner.style.display = 'block';
+    codeBox.style.display = 'none';
+    if(lbl){
+      const names = {pro:'ORDO PRO ATIVO ✓', grupo:'MENTORIA EM GRUPO ATIVA ✓', individual:'MENTORIA INDIVIDUAL ATIVA ✓'};
+      lbl.textContent = names[S.plan] || 'PLANO ATIVO ✓';
+    }
+  } else {
+    banner.style.display = 'none';
+    codeBox.style.display = 'block';
+  }
+}
+
+
+
+
+// ══ BOAS-VINDAS PÓS-COMPRA ══
+function enviarBoasVindas(){
+  const plan = S.plan;
+  let msg = '';
+
+  if(plan === 'grupo'){
+    msg = `Olá Rafael! 👋
+
+Acabei de adquirir a *Mentoria em Grupo* pelo app ORDO.
+
+Quero confirmar minha entrada e saber os próximos passos para:
+• Ser adicionado ao grupo
+• Confirmar a data da próxima call
+
+Estou pronto para começar! 🔥
+
+_Enviado pelo app ORDO_`;
+  } else if(plan === 'individual'){
+    msg = `Olá Rafael! 👋
+
+Acabei de adquirir a *Mentoria Individual* pelo app ORDO.
+
+Quero agendar nossa primeira sessão e alinhar os próximos passos.
+
+Estou pronto para começar! 🔥
+
+_Enviado pelo app ORDO_`;
+  }
+
+  window.open('https://wa.me/' + RAFAEL_WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function updateWelcomeCard(){
+  const plan = S.plan;
+  const msgEl = document.getElementById('welcome-msg-text');
+  if(!msgEl) return;
+
+  if(plan === 'grupo'){
+    msgEl.innerHTML = 'Sua vaga na <strong style="color:var(--text)">Mentoria em Grupo</strong> está confirmada. Toque no botão abaixo para entrar em contato com Rafael — ele vai te adicionar ao grupo e informar a data da próxima call.';
+  } else if(plan === 'individual'){
+    msgEl.innerHTML = 'Sua vaga na <strong style="color:var(--text)">Mentoria Individual</strong> está confirmada. Toque no botão abaixo para falar com Rafael e agendar sua primeira sessão 1:1.';
+  }
+}
+
+
+// ══ SUPORTE ══
+// Substitua pelo número real do WhatsApp do Rafael (com DDI)
+const RAFAEL_WHATSAPP = '5555981256174';
+
+function openWhatsApp(){
+  const url = 'https://wa.me/' + RAFAEL_WHATSAPP + '?text=' + encodeURIComponent('Olá Rafael! Vim pelo app ORDO.');
+  window.open(url, '_blank');
+}
+
+function enviarMensagem(){
+  const nome = document.getElementById('contact-nome').value.trim();
+  const assunto = document.getElementById('contact-assunto').value;
+  const msg = document.getElementById('contact-msg').value.trim();
+
+  if(!nome){ showToast('Digite seu nome'); return; }
+  if(!assunto){ showToast('Selecione o assunto'); return; }
+  if(!msg){ showToast('Escreva sua mensagem'); return; }
+
+  const texto = `Olá Rafael! 👋
+
+*Nome:* ${nome}
+*Assunto:* ${assunto}
+
+*Mensagem:*
+${msg}
+
+_Enviado pelo app ORDO_`;
+
+  const url = 'https://wa.me/' + RAFAEL_WHATSAPP + '?text=' + encodeURIComponent(texto);
+  window.open(url, '_blank');
+
+  document.getElementById('contact-nome').value = '';
+  document.getElementById('contact-assunto').value = '';
+  document.getElementById('contact-msg').value = '';
+  showToast('Abrindo WhatsApp... 💬');
+}
+
+// ══ MENTORIA ══
+// Link do grupo de WhatsApp/Telegram — substitua pelo link real
+const GRUPO_LINK = 'https://chat.whatsapp.com/SEU-LINK-DO-GRUPO';
+
+function updateMentoriaScreen(){
+  const plan = S.plan;
+  const hasMentoria = plan === 'grupo' || plan === 'individual';
+  const locked = document.getElementById('mentoria-locked');
+  const unlocked = document.getElementById('mentoria-unlocked');
+  const tag = document.getElementById('mentoria-plan-tag');
+  const badge4 = document.getElementById('hdr-plan-badge-4');
+  const badge5 = document.getElementById('hdr-plan-badge-5');
+
+  // Update badges
+  [badge4, badge5].forEach(b => {
+    if(!b) return;
+    if(isPro()){ b.className='pro-badge'; b.textContent='PRO'; b.onclick=null; }
+    else { b.className='free-badge'; b.textContent='FREE'; b.onclick=()=>goTo('upgrade'); }
+  });
+
+  if(hasMentoria){
+    locked.style.display = 'none';
+    unlocked.style.display = 'block';
+    const planNames = { grupo:'MENTORIA EM GRUPO ✓', individual:'MENTORIA INDIVIDUAL ✓' };
+    tag.textContent = planNames[plan] || 'ATIVO ✓';
+    tag.style.background = 'var(--gold)';
+
+    // Próxima call — data fictícia até integrar agenda real
+    const nextDate = document.getElementById('next-call-date');
+    const nextType = document.getElementById('next-call-type');
+    if(nextDate){
+      const d = new Date(); d.setDate(d.getDate() + (7 - d.getDay() + 4) % 7 || 7);
+      nextDate.textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+    }
+    if(nextType) nextType.textContent = plan === 'grupo' ? 'Call em grupo · Confirme sua presença' : 'Sessão individual · 1:1 com Rafael';
+    updateWelcomeCard();
+
+  } else {
+    locked.style.display = 'block';
+    unlocked.style.display = 'none';
+    tag.textContent = '🔒 BLOQUEADO';
+    tag.style.background = 'var(--muted)';
+  }
+}
+
+function toggleMA(id){
+  const card = document.getElementById('mac-'+id);
+  const wasOpen = card.classList.contains('open');
+  document.querySelectorAll('.mentoria-action-card').forEach(c => c.classList.remove('open'));
+  if(!wasOpen) card.classList.add('open');
+}
+
+function confirmarPresenca(resp){
+  const texto = resp === 'sim'
+    ? '✅ Rafael, vou confirmar minha presença na próxima call! Nos vemos lá.'
+    : '❌ Rafael, não conseguirei participar da próxima call. Podemos remarcar?';
+  window.open('https://wa.me/' + RAFAEL_WHATSAPP + '?text=' + encodeURIComponent(texto), '_blank');
+  showToast(resp === 'sim' ? 'Presença confirmada! 🎯' : 'Mensagem enviada 📩');
+  document.getElementById('mac-confirmar').classList.remove('open');
+}
+
+function solicitarRemarca(){
+  const msg = document.getElementById('remarcar-msg').value.trim();
+  if(!msg){ showToast('Informe sua disponibilidade'); return; }
+  const texto = `📅 *Solicitação de Remarca*
+
+${msg}
+
+_Enviado pelo app ORDO_`;
+  window.open('https://wa.me/' + RAFAEL_WHATSAPP + '?text=' + encodeURIComponent(texto), '_blank');
+  document.getElementById('remarcar-msg').value = '';
+  document.getElementById('mac-remarcar').classList.remove('open');
+  showToast('Solicitação enviada! 📅');
+}
+
+function enviarNotas(){
+  const msg = document.getElementById('notas-msg').value.trim();
+  if(!msg){ showToast('Escreva suas notas'); return; }
+  const texto = `📝 *Notas para a próxima call*
+
+${msg}
+
+_Enviado pelo app ORDO_`;
+  window.open('https://wa.me/' + RAFAEL_WHATSAPP + '?text=' + encodeURIComponent(texto), '_blank');
+  document.getElementById('notas-msg').value = '';
+  document.getElementById('mac-notas').classList.remove('open');
+  showToast('Notas enviadas! 📝');
+}
+
+function abrirGrupo(){
+  window.open(GRUPO_LINK, '_blank');
+}
+
+
+// ══ TOAST ══
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.classList.add('show');clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),2800);
+}
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(r => console.log('SW registered'))
+      .catch(e => console.log('SW error', e));
+  });
+}
+</script>
+
+
+<!-- PWA INSTALL BANNER -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;
+  background:var(--card);border-top:1px solid var(--gold-border);
+  padding:1rem 1.4rem;z-index:9000;backdrop-filter:blur(20px);
+  animation:slideUp .4s ease;">
+  <div style="display:flex;align-items:center;gap:.9rem;">
+    <div style="font-size:2rem;flex-shrink:0;">⬛</div>
+    <div style="flex:1;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.1em;color:var(--text);margin-bottom:2px;">INSTALAR O ORDO</div>
+      <div id="pwa-instructions" style="font-size:.72rem;color:var(--muted2);line-height:1.4;"></div>
+    </div>
+    <button onclick="document.getElementById('pwa-banner').style.display='none'"
+      style="background:transparent;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;flex-shrink:0;">✕</button>
+  </div>
+  <button id="pwa-install-btn" style="display:none;width:100%;margin-top:.8rem;padding:.8rem;
+    background:var(--gold);color:var(--black);border:none;border-radius:var(--r);
+    font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.2em;cursor:pointer;">
+    ADICIONAR À TELA INICIAL
+  </button>
+</div>
+
+<script>
+// Detect iOS vs Android and show appropriate instructions
+let deferredPrompt = null;
+
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+function isInStandaloneMode(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallBanner('android');
+});
+
+function showInstallBanner(type){
+  if(isInStandaloneMode()) return; // já instalado
+  const banner = document.getElementById('pwa-banner');
+  const instructions = document.getElementById('pwa-instructions');
+  const btn = document.getElementById('pwa-install-btn');
+  
+  if(type === 'android'){
+    instructions.textContent = 'Adicione o ORDO à sua tela inicial para acesso rápido.';
+    btn.style.display = 'block';
+    btn.onclick = async () => {
+      if(deferredPrompt){
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        banner.style.display = 'none';
+      }
+    };
+  } else {
+    instructions.innerHTML = 'No Safari: toque em <strong style="color:var(--gold)">Compartilhar</strong> → <strong style="color:var(--gold)">Adicionar à Tela de Início</strong>';
+  }
+  banner.style.display = 'block';
+}
+
+// Show iOS instructions after 3 seconds if on iOS Safari
+setTimeout(() => {
+  if(isIOS() && !isInStandaloneMode()){
+    showInstallBanner('ios');
+  }
+}, 3000);
+</script>
+
+</body>
+</html>

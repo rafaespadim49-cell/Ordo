@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema 3R — Consistência Real</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C96A;
+    --gold-dark: #8B6914;
+    --black: #0A0A0A;
+    --dark: #111111;
+    --card: #161616;
+    --border: rgba(201,168,76,0.2);
+    --text: #E0D5C0;
+    --muted: #6B6350;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--black);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SPLASH ── */
+  #splash {
+    position: fixed; inset: 0;
+    background: var(--black);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 999;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  #splash.hidden { opacity: 0; visibility: hidden; }
+  .splash-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 6rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    animation: pulseGold 1.5s ease-in-out infinite;
+  }
+  .splash-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+  }
+  @keyframes pulseGold {
+    0%,100% { text-shadow: 0 0 20px rgba(201,168,76,0.3); }
+    50% { text-shadow: 0 0 60px rgba(201,168,76,0.8); }
+  }
+
+  /* ── LAYOUT ── */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+  #app.visible { display: flex; }
+
+  /* ── HEADER ── */
+  header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo-mark {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+  }
+  .logo-mark span { color: var(--text); font-size: 0.9rem; }
+  .header-right { font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
+
+  /* ── MAIN CONTENT ── */
+  main { flex: 1; padding-bottom: 5rem; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── HOME ── */
+  .home-hero {
+    padding: 2rem 1.5rem 1.5rem;
+    background: linear-gradient(180deg, rgba(201,168,76,0.05) 0%, transparent 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .greeting {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    line-height: 1;
+    color: var(--gold);
+  }
+  .hero-sub {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .streak-bar {
+    margin: 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .streak-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .streak-label { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+  .streak-label strong { color: var(--text); display: block; font-family: 'Rajdhani', sans-serif; font-size: 1rem; }
+  .streak-dots { display: flex; gap: 6px; margin-top: 0.5rem; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .dot.done { background: var(--gold); }
+  .dot.today { background: var(--gold-light); box-shadow: 0 0 8px var(--gold); }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 0 1.5rem;
+    margin-bottom: 0.8rem;
+    margin-top: 1.5rem;
+  }
+
+  .daily-cards {
+    display: flex; flex-direction: column; gap: 0.8rem;
+    padding: 0 1.5rem;
+  }
+
+  .daily-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    display: flex; align-items: center; gap: 1rem;
+    cursor: pointer;
+    transition: border-color 0.3s, background 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .daily-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--gold-dark);
+    transition: background 0.3s;
+  }
+  .daily-card.done { border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.05); }
+  .daily-card.done::before { background: var(--gold); }
+  .card-icon {
+    font-size: 1.5rem;
+    width: 2.5rem; height: 2.5rem;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(201,168,76,0.1);
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .card-info { flex: 1; }
+  .card-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text);
+  }
+  .card-desc { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .card-check {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--gold-dark);
+    display: flex; align-items: center; justify-content: center;
+    color: transparent;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .daily-card.done .card-check {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--black);
+  }
+
+  /* ── PROTOCOLO 3R ── */
+  .three-r-header {
+    padding: 2rem 1.5rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .three-r-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .three-r-big {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .three-r-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+    line-height: 1.5;
+    max-width: 280px;
+    margin-left: auto; margin-right: auto;
+  }
+
+  .r-cards {
+    display: flex; flex-direction: column; gap: 1px;
+    margin: 1.5rem;
+  }
+  .r-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 0.8rem;
+    cursor: pointer;
+  }
+  .r-card-header {
+    padding: 1.2rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .r-letter {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: var(--gold);
+    line-height: 1;
+    width: 2rem;
+    flex-shrink: 0;
+  }
+  .r-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text);
+    display: block;
+  }
+  .r-tagline { font-size: 0.78rem; color: var(--muted); }
+  .r-arrow { margin-left: auto; color: var(--gold-dark); font-size: 1.2rem; transition: transform 0.3s; }
+  .r-card.open .r-arrow { transform: rotate(90deg); }
+  .r-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s;
+    padding: 0 1.2rem;
+    border-top: 0px solid var(--border);
+    font-size: 0.88rem; line-height: 1.7; color: var(--muted);
+  }
+  .r-card.open .r-body {
+    max-height: 400px;
+    padding: 1rem 1.2rem 1.2rem;
+    border-top: 1px solid var(--border);
+  }
+  .r-body strong { color: var(--gold); }
+
+  /* ── CHECKIN / DIÁRIO ── */
+  .checkin-wrap { padding: 1.5rem; }
+  .checkin-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+  }
+  .checkin-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+  .mood-selector {
+    display: flex; gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+  .mood-btn {
+    flex: 1;
+    padding: 0.8rem 0.4rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.3rem;
+  }
+  .mood-label { font-size: 0.65rem; color: var(--muted); display: block; margin-top: 3px; font-family: 'Rajdhani', sans-serif; }
+  .mood-btn.selected { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+
+  .input-group { margin-bottom: 1.2rem; }
+  .input-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  textarea, input[type=text] {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus, input:focus { border-color: var(--gold); }
+  textarea { min-height: 100px; }
+
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.8rem;
+    cursor: pointer;
+  }
+  .toggle-label { font-size: 0.9rem; color: var(--text); }
+  .toggle {
+    width: 44px; height: 24px;
+    background: var(--border);
+    border-radius: 12px;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    background: var(--muted);
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.3s, background 0.3s;
+  }
+  .toggle.on { background: rgba(201,168,76,0.3); }
+  .toggle.on::after { transform: translateX(20px); background: var(--gold); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 1rem;
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    border-radius: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:hover { background: var(--gold-light); }
+
+  /* ── HISTÓRICO ── */
+  .history-wrap { padding: 1.5rem; }
+  .history-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--gold); margin-bottom: 0.3rem; }
+  .history-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+  .stats-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.8rem; margin-bottom: 1.5rem;
+  }
+  .stat-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 0.8rem;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label { font-size: 0.7rem; color: var(--muted); margin-top: 3px; font-family: 'Rajdhani', sans-serif; letter-spacing: 0.1em; }
+
+  .week-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 6px; margin-bottom: 1.5rem;
+  }
+  .week-day { text-align: center; }
+  .week-label { font-size: 0.6rem; color: var(--muted); font-family: 'Rajdhani', sans-serif; margin-bottom: 4px; }
+  .week-dot {
+    width: 100%; aspect-ratio: 1;
+    border-radius: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+  }
+  .week-dot.done { background: var(--gold); border-color: var(--gold); }
+  .week-dot.partial { background: rgba(201,168,76,0.3); border-color: var(--gold-dark); }
+
+  .history-list { display: flex; flex-direction: column; gap: 0.8rem; }
+  .history-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+  }
+  .history-date {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .history-mood { font-size: 1.2rem; }
+  .history-note { font-size: 0.85rem; color: var(--text); margin-top: 0.3rem; line-height: 1.5; }
+  .history-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--gold-dark);
+    color: var(--gold);
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── BOTTOM NAV ── */
+  nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(10,10,10,0.97);
+    border-top: 1px solid var(--border);
+    display: flex;
+    backdrop-filter: blur(10px);
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 0.8rem 0.5rem;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: color 0.2s;
+    color: var(--muted);
+    border: none; background: transparent;
+  }
+  .nav-btn.active { color: var(--gold); }
+  .nav-icon { font-size: 1.3rem; }
+  .nav-label { font-family: 'Rajdhani', sans-serif; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 5.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--gold);
+    color: var(--black);
+    padding: 0.7rem 1.5rem;
+    border-radius: 30px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── PERFIL ── */
+  .profile-wrap { padding: 1.5rem; }
+  .profile-hero {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  .avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    color: var(--black);
+    flex-shrink: 0;
+  }
+  .profile-name { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--text); }
+  .profile-tag { font-size: 0.78rem; color: var(--gold); }
+  .profile-section { margin-bottom: 1.5rem; }
+  .profile-section-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--gold); letter-spacing: 0.1em; margin-bottom: 0.8rem; }
+  .profile-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.6rem;
+    cursor: pointer;
+  }
+  .profile-row-label { font-size: 0.9rem; color: var(--text); }
+  .profile-row-value { font-size: 0.85rem; color: var(--gold); font-family: 'Rajdhani', sans-serif; }
+
+  .mentor-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    display: flex; gap: 1rem; align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+  .mentor-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a2a2a, #444);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0;
+    border: 2px solid var(--gold-dark);
+  }
+  .mentor-name { font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--text); }
+  .mentor-bio { font-size: 0.78rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  .btn-secondary {
+    width: 100%;
+    padding: 0.9rem;
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold-dark);
+    border-radius: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0.6rem;
+  }
+  .btn-secondary:hover { background: rgba(201,168,76,0.1); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">3R</div>
+  <div class="splash-sub">Consistência Real</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <header>
+    <div class="logo-mark">3R <span>Sistema</span></div>
+    <div class="header-right">Rafael Espadim</div>
+  </header>
+
+  <main>
+
+    <!-- HOME -->
+    <div class="screen active" id="screen-home">
+      <div class="home-hero">
+        <div class="greeting">Bem-vindo de volta</div>
+        <div class="hero-title">Hoje é<br>seu dia.</div>
+        <div class="hero-sub">Sem desculpa. Sem culpa. Apenas execute.</div>
+      </div>
+
+      <div class="streak-bar">
+        <div>
+          <div class="streak-num" id="streak-count">0</div>
+          <div style="font-size:0.65rem;color:var(--muted);font-family:'Rajdhani',sans-serif;letter-spacing:0.1em;">DIAS</div>
+        </div>
+        <div class="streak-label">
+          <strong>🔥 Sequência Atual</strong>
+          Mantenha o ritmo. Cada dia conta.
+          <div class="streak-dots" id="streak-dots"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Rotina de Hoje</div>
+      <div class="daily-cards" id="daily-cards">
+        <div class="daily-card" data-id="0" onclick="toggleCard(0)">
+          <div class="card-icon">🏋️</div>
+          <div class="card-info">
+            <div class="card-name">Treino</div>
+            <div class="card-desc">Marcar treino como realizado</div>
+          </div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="daily-card" data-id="1" onclick="toggleCard(1)">
+          <div class="card-icon">🧠</div>
+          <div class="card-info">
+            <div class="card-name">Foco Mental</div>
+            <div class="card-desc">5 min de clareza antes do dia</div>
+          </div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="daily-card" data-id="2" onclick="toggleCard(2)">
+          <div class="card-icon">📋</div>
+          <div class="card-info">
+            <div class="card-name">Planejamento</div>
+            <div class="card-desc">Definir as 3 prioridades do dia</div>
+          </div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="daily-card" data-id="3" onclick="toggleCard(3)">
+          <div class="card-icon">💧</div>
+          <div class="card-info">
+            <div class="card-name">Hidratação</div>
+            <div class="card-desc">Mínimo 2L de água</div>
+          </div>
+          <div class="card-check">✓</div>
+        </div>
+        <div class="daily-card" data-id="4" onclick="toggleCard(4)">
+          <div class="card-icon">😴</div>
+          <div class="card-info">
+            <div class="card-name">Sono</div>
+            <div class="card-desc">Dormiu bem ontem? Registre.</div>
+          </div>
+          <div class="card-check">✓</div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:2rem;">Protocolo de Contingência</div>
+      <div style="margin:0 1.5rem; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.2rem;">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--text);margin-bottom:0.4rem;">🚨 Semana Apertou?</div>
+        <div style="font-size:0.83rem;color:var(--muted);line-height:1.6;">Ative o modo contingência: reduza volume, mas <strong style="color:var(--gold)">não quebre a sequência.</strong> Fazer 20% é melhor do que zero.</div>
+        <button class="btn-secondary" style="margin-top:1rem" onclick="showToast('Modo contingência ativado! 💪')">Ativar Modo Contingência</button>
+      </div>
+    </div>
+
+    <!-- PROTOCOLO 3R -->
+    <div class="screen" id="screen-metodo">
+      <div class="three-r-header">
+        <div class="three-r-title">O Método</div>
+        <div class="three-r-big">SISTEMA 3R</div>
+        <div class="three-r-desc">A estrutura operacional para quem tem trabalho, treino e projetos ao mesmo tempo — e cansa de começar e abandonar.</div>
+      </div>
+
+      <div class="r-cards">
+        <div class="r-card" onclick="toggleR(this)">
+          <div class="r-card-header">
+            <div class="r-letter">R1</div>
+            <div>
+              <span class="r-name">Reconhecer</span>
+              <span class="r-tagline">Identifique o padrão que te trava</span>
+            </div>
+            <div class="r-arrow">›</div>
+          </div>
+          <div class="r-body">
+            O primeiro passo é <strong>parar de fingir que motivação basta</strong>. Você precisa reconhecer o ciclo: início entusiasmado → cansaço → abandono → culpa → recomeço sem estrutura.<br><br>
+            No Reconhecer, você mapeia: quais situações te fazem travar? Qual horário funciona de verdade para você? Qual volume é sustentável na sua realidade — não no ideal.<br><br>
+            <strong>Ferramenta:</strong> Diário de padrões (incluído no check-in diário do app).
+          </div>
+        </div>
+
+        <div class="r-card" onclick="toggleR(this)">
+          <div class="r-card-header">
+            <div class="r-letter">R2</div>
+            <div>
+              <span class="r-name">Reajustar</span>
+              <span class="r-tagline">Monte uma rotina que funciona na realidade</span>
+            </div>
+            <div class="r-arrow">›</div>
+          </div>
+          <div class="r-body">
+            Não é sobre fazer mais. É sobre <strong>fazer o certo na dose certa</strong>. Reajustar significa construir um plano que funciona quando a semana aperta — não só quando tudo está perfeito.<br><br>
+            Você define: blocos de tempo mínimos viáveis, prioridades inegociáveis, e o <strong>Protocolo de Contingência</strong> para quando a vida complica.<br><br>
+            <strong>Ferramenta:</strong> Templates progressivos por módulo (liberados semana a semana).
+          </div>
+        </div>
+
+        <div class="r-card" onclick="toggleR(this)">
+          <div class="r-card-header">
+            <div class="r-letter">R3</div>
+            <div>
+              <span class="r-name">Repetir</span>
+              <span class="r-tagline">Construa consistência sem depender de força de vontade</span>
+            </div>
+            <div class="r-arrow">›</div>
+          </div>
+          <div class="r-body">
+            Consistência não é força de vontade. É <strong>sistema</strong>. O terceiro R é sobre criar os gatilhos, o ambiente e a accountability que fazem você agir mesmo quando não está com vontade.<br><br>
+            A repetição vira automático quando você tem: sequência visível (streak), comunidade de accountability, e revisões semanais para ajustar o que não funcionou.<br><br>
+            <strong>Ferramenta:</strong> Tracker de sequência + check-ins + comunidade A Ordem 3R.
+          </div>
+        </div>
+
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin:0.5rem 0;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);letter-spacing:0.1em;margin-bottom:0.5rem;">O CICLO QUE O 3R QUEBRA</div>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;font-size:0.82rem;color:var(--muted);">
+            <span style="color:var(--text)">Início</span> <span>→</span>
+            <span>Abandono</span> <span>→</span>
+            <span>Culpa</span> <span>→</span>
+            <span>Recomeço</span> <span style="color:var(--gold)">✗</span>
+          </div>
+          <div style="margin-top:0.8rem;font-size:0.82rem;color:var(--gold);font-family:'Rajdhani',sans-serif;letter-spacing:0.05em;">
+            COM O 3R: Estrutura → Ajuste → Consistência → Resultado ✓
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHECK-IN -->
+    <div class="screen" id="screen-checkin">
+      <div class="checkin-wrap">
+        <div class="checkin-title">Check-in Diário</div>
+        <div class="checkin-sub">Registre seu dia. Sem julgamento. É dado, não fracasso.</div>
+
+        <div class="section-title" style="padding:0;margin-bottom:0.8rem;">Como você está?</div>
+        <div class="mood-selector" id="mood-selector">
+          <div class="mood-btn" onclick="selectMood(this,'🔥')">🔥<span class="mood-label">Forte</span></div>
+          <div class="mood-btn" onclick="selectMood(this,'😐')">😐<span class="mood-label">Ok</span></div>
+          <div class="mood-btn" onclick="selectMood(this,'😓')">😓<span class="mood-label">Difícil</span></div>
+          <div class="mood-btn" onclick="selectMood(this,'⚡')">⚡<span class="mood-label">Focado</span></div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">O que travou hoje?</label>
+          <textarea id="block-input" placeholder="Ex: reunião atrasou, não consegui treinar de manhã..."></textarea>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">O que funcionou?</label>
+          <textarea id="win-input" placeholder="Ex: fiz o treino reduzido mesmo com o dia cheio..."></textarea>
+        </div>
+
+        <div class="section-title" style="padding:0;margin-bottom:0.8rem;margin-top:1rem;">O que você fez hoje?</div>
+
+        <div class="toggle-row" onclick="toggleItem(this)">
+          <span class="toggle-label">🏋️ Treino</span>
+          <div class="toggle" id="t-treino"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleItem(this)">
+          <span class="toggle-label">🧠 Planejamento</span>
+          <div class="toggle" id="t-plan"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleItem(this)">
+          <span class="toggle-label">💧 Hidratação</span>
+          <div class="toggle" id="t-agua"></div>
+        </div>
+        <div class="toggle-row" onclick="toggleItem(this)">
+          <span class="toggle-label">😴 Sono adequado</span>
+          <div class="toggle" id="t-sono"></div>
+        </div>
+
+        <div class="input-group" style="margin-top:1.2rem;">
+          <label class="input-label">Ajuste para amanhã</label>
+          <input type="text" id="adjust-input" placeholder="O que vai fazer diferente amanhã?">
+        </div>
+
+        <button class="btn-primary" onclick="saveCheckin()">SALVAR CHECK-IN</button>
+      </div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div class="screen" id="screen-historico">
+      <div class="history-wrap">
+        <div class="history-title">Histórico</div>
+        <div class="history-sub">Sua jornada de consistência.</div>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-num" id="stat-total">0</div>
+            <div class="stat-label">Check-ins</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="stat-streak">0</div>
+            <div class="stat-label">Sequência</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" id="stat-rate">0%</div>
+            <div class="stat-label">Taxa treino</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="padding:0;margin-bottom:0.8rem;">Últimos 7 dias</div>
+        <div class="week-grid" id="week-grid"></div>
+
+        <div class="section-title" style="padding:0;margin-bottom:0.8rem;margin-top:1.5rem;">Registros</div>
+        <div class="history-list" id="history-list">
+          <div style="text-align:center;color:var(--muted);font-size:0.85rem;padding:2rem;">
+            Nenhum check-in ainda.<br>Faça seu primeiro registro! 💪
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div class="screen" id="screen-perfil">
+      <div class="profile-wrap">
+        <div class="profile-hero">
+          <div class="avatar" id="avatar-initials">?</div>
+          <div>
+            <div class="profile-name" id="profile-name-display">Seu Nome</div>
+            <div class="profile-tag">⚡ Membro Sistema 3R</div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <div class="profile-section-title">Seu Mentor</div>
+          <div class="mentor-card">
+            <div class="mentor-avatar">🪖</div>
+            <div>
+              <div class="mentor-name">Rafael Espadim</div>
+              <div class="mentor-bio">Militar • Triatleta • Ed. Física & Psicologia do Esporte. Performance sob pressão — manter o que precisa ser feito mesmo com pouco tempo.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <div class="profile-section-title">Configurações</div>
+          <div class="profile-row" onclick="editName()">
+            <span class="profile-row-label">Nome</span>
+            <span class="profile-row-value" id="name-display-row">Definir →</span>
+          </div>
+          <div class="profile-row" onclick="showToast('Em breve: notificações! 🔔')">
+            <span class="profile-row-label">Lembrete diário</span>
+            <span class="profile-row-value">06:00 →</span>
+          </div>
+          <div class="profile-row" onclick="showToast('Em breve: módulos semanais! 📚')">
+            <span class="profile-row-label">Módulo atual</span>
+            <span class="profile-row-value">Semana 1 →</span>
+          </div>
+        </div>
+
+        <div class="profile-section">
+          <div class="profile-section-title">Mentoria</div>
+          <button class="btn-primary" onclick="showToast('Redirecionando para mentoria em grupo! 🚀')">ENTRAR NA MENTORIA EM GRUPO</button>
+          <button class="btn-secondary" style="margin-top:0.6rem" onclick="showToast('Redirecionando para mentoria individual! 👤')">MENTORIA INDIVIDUAL</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- BOTTOM NAV -->
+  <nav>
+    <button class="nav-btn active" onclick="navigate('home',this)">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Início</span>
+    </button>
+    <button class="nav-btn" onclick="navigate('metodo',this)">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Método</span>
+    </button>
+    <button class="nav-btn" onclick="navigate('checkin',this)">
+      <span class="nav-icon">✅</span>
+      <span class="nav-label">Check-in</span>
+    </button>
+    <button class="nav-btn" onclick="navigate('historico',this)">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Histórico</span>
+    </button>
+    <button class="nav-btn" onclick="navigate('perfil',this)">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Perfil</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// State
+let state = {
+  streak: 0,
+  checkins: [],
+  dailyCards: [false,false,false,false,false],
+  selectedMood: '',
+  userName: ''
+};
+
+// Load from localStorage
+function loadState() {
+  try {
+    const saved = localStorage.getItem('3r_state');
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem('3r_state', JSON.stringify(state)); } catch(e) {}
+}
+
+// Splash
+window.addEventListener('load', () => {
+  loadState();
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    renderHome();
+    renderHistory();
+    if (state.userName) {
+      document.getElementById('profile-name-display').textContent = state.userName;
+      document.getElementById('name-display-row').textContent = state.userName + ' →';
+      document.getElementById('avatar-initials').textContent = state.userName[0].toUpperCase();
+    }
+  }, 1800);
+});
+
+// Navigation
+function navigate(screen, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  btn.classList.add('active');
+  if (screen === 'historico') renderHistory();
+}
+
+// Toggle daily cards
+function toggleCard(id) {
+  state.dailyCards[id] = !state.dailyCards[id];
+  saveState();
+  const card = document.querySelector(`[data-id="${id}"]`);
+  card.classList.toggle('done', state.dailyCards[id]);
+  if (state.dailyCards[id]) showToast('✓ Marcado!');
+}
+
+// Render home
+function renderHome() {
+  state.dailyCards.forEach((done, i) => {
+    const card = document.querySelector(`[data-id="${i}"]`);
+    if (card) card.classList.toggle('done', done);
+  });
+  document.getElementById('streak-count').textContent = state.streak;
+  const dots = document.getElementById('streak-dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < state.streak % 7 ? ' done' : '') + (i === state.streak % 7 ? ' today' : '');
+    dots.appendChild(d);
+  }
+}
+
+// Toggle R accordions
+function toggleR(card) {
+  const wasOpen = card.classList.contains('open');
+  document.querySelectorAll('.r-card').forEach(c => c.classList.remove('open'));
+  if (!wasOpen) card.classList.add('open');
+}
+
+// Mood selector
+function selectMood(btn, mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.selectedMood = mood;
+}
+
+// Toggle items in check-in
+function toggleItem(row) {
+  const toggle = row.querySelector('.toggle');
+  toggle.classList.toggle('on');
+}
+
+// Save check-in
+function saveCheckin() {
+  const block = document.getElementById('block-input').value;
+  const win = document.getElementById('win-input').value;
+  const adjust = document.getElementById('adjust-input').value;
+  const t = document.getElementById('t-treino').classList.contains('on');
+
+  const entry = {
+    date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }),
+    mood: state.selectedMood || '😐',
+    block, win, adjust,
+    treino: t,
+    timestamp: Date.now()
+  };
+
+  state.checkins.unshift(entry);
+  state.streak = state.checkins.length;
+  renderHome();
+
+  // Reset form
+  document.getElementById('block-input').value = '';
+  document.getElementById('win-input').value = '';
+  document.getElementById('adjust-input').value = '';
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.toggle').forEach(t => t.classList.remove('on'));
+  state.selectedMood = '';
+
+  saveState();
+  showToast('Check-in salvo! 🔥 +1 dia');
+}
+
+// Render history
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const total = state.checkins.length;
+  const treinos = state.checkins.filter(c => c.treino).length;
+  const rate = total ? Math.round(treinos / total * 100) : 0;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-streak').textContent = state.streak;
+  document.getElementById('stat-rate').textContent = rate + '%';
+
+  // Week grid
+  const grid = document.getElementById('week-grid');
+  grid.innerHTML = '';
+  const days = ['D','S','T','Q','Q','S','S'];
+  days.forEach((d, i) => {
+    const col = document.createElement('div');
+    col.className = 'week-day';
+    col.innerHTML = `<div class="week-label">${d}</div><div class="week-dot ${i < (state.streak % 7) ? 'done' : ''}"></div>`;
+    grid.appendChild(col);
+  });
+
+  if (state.checkins.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.85rem;padding:2rem;">Nenhum check-in ainda.<br>Faça seu primeiro registro! 💪</div>';
+    return;
+  }
+
+  list.innerHTML = state.checkins.map(c => `
+    <div class="history-item">
+      <div class="history-date">${c.date}</div>
+      <div class="history-mood">${c.mood}</div>
+      ${c.win ? `<div class="history-note">✅ ${c.win}</div>` : ''}
+      ${c.block ? `<div class="history-note" style="color:var(--muted)">⚡ ${c.block}</div>` : ''}
+      <div class="history-badges">
+        ${c.treino ? '<span class="badge">TREINO ✓</span>' : ''}
+        ${c.adjust ? '<span class="badge">AJUSTE</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// Toast
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Edit name
+function editName() {
+  const name = prompt('Qual é o seu nome?');
+  if (name && name.trim()) {
+    state.userName = name.trim();
+    document.getElementById('profile-name-display').textContent = state.userName;
+    document.getElementById('name-display-row').textContent = state.userName + ' →';
+    document.getElementById('avatar-initials').textContent = state.userName[0].toUpperCase();
+    saveState();
+    showToast('Nome salvo! 👊');
+  }
+}
+</script>
+</body>
+</html>
