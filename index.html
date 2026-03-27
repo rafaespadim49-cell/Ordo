@@ -1308,7 +1308,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;
   <button class="nav-btn" onclick="goTo('crise')"><span class="nav-icon">🚨</span><span class="nav-lbl">Crise</span></button>
   <button class="nav-btn" onclick="goTo('score')"><span class="nav-icon">📊</span><span class="nav-lbl">Score</span></button>
   <button class="nav-btn" onclick="goTo('mentoria')"><span class="nav-icon">🎯</span><span class="nav-lbl">Mentoria</span></button>
-  <button class="nav-btn" onclick="goTo('suporte')"><span class="nav-icon">💬</span><span class="nav-lbl">Suporte</span></button>
+  <button class="nav-btn" onclick="goTo('suporte')"><span class="nav-icon">💬</span><span class="nav-lbl">Suporte</span></button><button class="nav-btn" onclick="goTo('upgrade')"><span class="nav-icon">⭐</span><span class="nav-lbl">Planos</span></button>
 </nav>
 
 </div><!-- #app -->
@@ -1498,9 +1498,9 @@ function enterApp(){
 }
 
 // ══ NAVIGATION ══
-const SCREENS=['home','semana','crise','score','mentoria','suporte'];
+const SCREENS=['home','semana','crise','score','mentoria','suporte','upgrade'];
 function goTo(name){
-  SCREENS.forEach(s=>document.getElementById('screen-'+s)?.classList.remove('active'));
+  ['home','semana','crise','score','mentoria','suporte','upgrade'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el)el.classList.remove('active');});document.getElementById('screen-does-not-exist')&&.getElementById('screen-'+s)?.classList.remove('active'));
   document.getElementById('screen-'+name)?.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',SCREENS[i]===name));
   S.activeScreen=name;saveState();
