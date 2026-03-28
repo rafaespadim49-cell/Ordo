@@ -1,4 +1,4 @@
-const CACHE = 'ordo-v1';
+const CACHE = 'ordo-v4';
 const ASSETS = [
   './ordo-v3.html',
   './manifest.json'
