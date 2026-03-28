@@ -2,7 +2,7 @@
   "name": "ORDO — Sistema 3R",
   "short_name": "ORDO",
   "description": "Sua ordem contra o caos. Sistema 3R por Rafael Espadim.",
-  "start_url": "./ordo-v3.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#080808",
   "theme_color": "#080808",
@@ -22,6 +22,10 @@
     }
   ],
   "screenshots": [],
-  "categories": ["health", "fitness", "lifestyle"],
+  "categories": [
+    "health",
+    "fitness",
+    "lifestyle"
+  ],
   "lang": "pt-BR"
 }
