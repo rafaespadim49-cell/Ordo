@@ -1427,7 +1427,6 @@ window.addEventListener('load',()=>{
     window.history.replaceState({}, '', window.location.pathname);
   }
   // Reset total de estado para garantir início pela welcome
-  Object.assign(S,{obStep:0,c1:null,c2:null,c3:null,plan:'pro',treino:{status:null,dur:45,nota:''},sono:{qual:null,hora:'22:30',horas:7,nota:''},hab:{clareza:false,hidra:false,plano:false},score:0,dias:0,crises:0,trialDays:7,activeScreen:'onboarding',crisisOpt:null,blocks:[]});
   loadState();
   // Remove active de todas as telas antes de iniciar
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -1500,7 +1499,7 @@ function enterApp(){
 // ══ NAVIGATION ══
 const SCREENS=['home','semana','crise','score','mentoria','suporte','upgrade'];
 function goTo(name){
-  ['home','semana','crise','score','mentoria','suporte','upgrade'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el)el.classList.remove('active');});document.getElementById('screen-does-not-exist')&&.getElementById('screen-'+s)?.classList.remove('active'));
+  ['home','semana','crise','score','mentoria','suporte','upgrade'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el)el.classList.remove('active');});
   document.getElementById('screen-'+name)?.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',SCREENS[i]===name));
   S.activeScreen=name;saveState();
