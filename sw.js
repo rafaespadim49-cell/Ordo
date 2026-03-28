@@ -1,6 +1,6 @@
 const CACHE = 'ordo-v4';
 const ASSETS = [
-  './ordo-v3.html',
+  './index.html',
   './manifest.json'
 ];
 
@@ -32,7 +32,5 @@ self.addEventListener('fetch', e => {
         const clone = response.clone();
         caches.open(CACHE).then(cache => cache.put(e.request, clone));
         return response;
-      }).catch(() => caches.match('./ordo-v3.html'));
+      }).catch(() => caches.match('./index.html'));
     })
-  );
-});
